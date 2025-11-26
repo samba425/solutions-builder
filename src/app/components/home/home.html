@@ -1,0 +1,38 @@
+<div class="wizard-container">
+  <div class="wizard-content">
+    <!-- Step Indicators -->
+    <div class="step-indicators">
+      <div class="step-item" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+        <div class="step-number">1</div>
+        <div class="step-label">Problem Input</div>
+      </div>
+      <div class="step-item" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+        <div class="step-number">2</div>
+        <div class="step-label">Data Sources</div>
+      </div>
+      <div class="step-item" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+        <div class="step-number">3</div>
+        <div class="step-label">Architecture</div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="wizard-main">
+      @if (currentStep !== 2) {
+        <h2 class="wizard-title">Design Your Cloud Architecture</h2>
+        <p class="wizard-subtitle">Provide your technical requirements and let AI generate a comprehensive cloud solution architecture</p>
+      }
+
+      <!-- Step Content -->
+      @if (currentStep === 1) {
+        <app-problem-input (nextStep)="goToStep(2)" [formData]="formData"></app-problem-input>
+      }
+      @if (currentStep === 2) {
+        <app-review (nextStep)="goToStep(3)" (prevStep)="goToStep(1)" [formData]="formData"></app-review>
+      }
+      @if (currentStep === 3) {
+        <app-architecture (prevStep)="goToStep(2)" (goToStep)="goToStep($event)" [formData]="formData"></app-architecture>
+      }
+    </div>
+  </div>
+</div>

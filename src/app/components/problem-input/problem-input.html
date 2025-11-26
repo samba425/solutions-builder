@@ -1,0 +1,227 @@
+<div class="step-content">
+  <!-- Industry Category -->
+  <div class="form-group mb-2">
+    <label class="form-label">Industry Category <span class="text-danger">*</span></label>
+    <select class="form-select" [(ngModel)]="formData.industry">
+      <option value="">Select your industry</option>
+      <option value="healthcare">Healthcare</option>
+      <option value="finance">Finance & Banking</option>
+      <option value="retail">Retail & E-commerce</option>
+      <option value="manufacturing">Manufacturing</option>
+      <option value="education">Education</option>
+      <option value="technology">Technology</option>
+      <option value="logistics">Logistics & Transportation</option>
+      <option value="media">Media & Entertainment</option>
+      <option value="government">Government</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <!-- Business Scenario -->
+  <div class="form-group mb-2">
+    <label class="form-label">Business Scenario</label>
+    <textarea 
+      class="form-control" 
+      rows="8" 
+      [(ngModel)]="formData.businessScenario"
+      placeholder="Describe your technical requirements, expected traffic, performance needs, compliance requirements, and any specific constraints..."></textarea>
+    <small class="form-text text-muted">Provide as much technical detail as possible for better architecture recommendations</small>
+  </div>
+
+  <!-- Additional Context -->
+  <div class="form-group mb-2">
+    <label class="form-label">Additional Context</label>
+    <div class="additional-context-grid">
+      <button type="button" class="context-btn" [class.active]="isContextSelected('document')" (click)="toggleContext('document')">
+        <i class="bi bi-file-text"></i>
+        <span>Document</span>
+      </button>
+      <button type="button" class="context-btn" [class.active]="isContextSelected('pdf')" (click)="toggleContext('pdf')">
+        <i class="bi bi-file-pdf"></i>
+        <span>PDF</span>
+      </button>
+      <button type="button" class="context-btn" [class.active]="isContextSelected('audio')" (click)="toggleContext('audio')">
+        <i class="bi bi-mic"></i>
+        <span>Audio</span>
+      </button>
+      <button type="button" class="context-btn" [class.active]="isContextSelected('video')" (click)="toggleContext('video')">
+        <i class="bi bi-camera-video"></i>
+        <span>Video</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Uploaded Files Display - Only show when context is selected -->
+  @if (formData.additionalContext && formData.additionalContext.length > 0) {
+    <div class="form-group mb-2">
+      <div class="uploaded-files-list">
+        @for (context of formData.additionalContext; track context) {
+          <div class="uploaded-file-item">
+            <div class="d-flex align-items-center gap-3">
+              <div class="file-icon">
+                <i class="bi" [class]="getFileIcon(context)"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="file-name">sample-file.{{ context === 'document' ? 'docx' : context }}</div>
+                <div class="file-size">2.5 MB</div>
+              </div>
+              <button class="btn-remove-file" (click)="toggleContext(context)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Data Sources Section -->
+  <div class="form-group mb-2">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <label class="form-label mb-0">Data Sources <span class="text-danger">*</span></label>
+      <button type="button" class="btn-add-source" (click)="openModal(); $event.stopPropagation()">
+        <i class="bi bi-plus-circle"></i> Add Data Source
+      </button>
+    </div>
+    
+    @if (formData.dataSources && formData.dataSources.length > 0) {
+      <div class="data-sources-list">
+        @for (source of formData.dataSources; track source.id) {
+          <div class="data-source-item">
+            <div class="source-header">
+              <h6>{{ source.name }}</h6>
+              <button class="btn-remove-file" (click)="removeDataSource(source.id)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <div class="source-details">
+              <span class="badge-inline badge-type">{{ source.type }}</span>
+              @if (source.format) {
+                <span class="badge-inline">{{ source.format }}</span>
+              }
+              @if (source.volume) {
+                <span class="badge-inline">{{ source.volume }}</span>
+              }
+              @if (source.frequency) {
+                <span class="badge-inline">{{ source.frequency }}</span>
+              }
+            </div>
+            @if (source.description) {
+              <p class="source-description">{{ source.description }}</p>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="text-muted small mb-0">No data sources added yet. Click "Add Data Source" to begin.</p>
+    }
+  </div>
+
+  <!-- Continue Button -->
+  <div class="navigation-buttons">
+    <div class="w-100">
+      <button type="button" class="btn-continue w-100" (click)="nextStep.emit()" [disabled]="!formData.industry">
+        <i class="bi bi-gear"></i> Continue to Preview
+      </button>
+      <p class="text-center text-muted small mt-3 mb-0">Review your inputs before generating the architecture</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal-dialog" #modalDialog>
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h5 class="modal-title">Add Data Source</h5>
+          <p class="modal-subtitle">Add all data sources that will feed into your AI solution</p>
+        </div>
+        <button type="button" class="btn-close" (click)="closeModal(); $event.stopPropagation()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Data Source Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="newSource.name" 
+              placeholder="e.g., Customer Database">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Type <span class="text-danger">*</span></label>
+            <select class="form-select" [(ngModel)]="newSource.type">
+              <option value="">Select type</option>
+              <option value="Database">Database</option>
+              <option value="API">API</option>
+              <option value="File Storage">File Storage</option>
+              <option value="Stream">Stream</option>
+              <option value="Data Warehouse">Data Warehouse</option>
+              <option value="Data Lake">Data Lake</option>
+              <option value="Third-party Service">Third-party Service</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Format</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="newSource.format" 
+              placeholder="e.g., JSON, PostgreSQL">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Data Volume</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              [(ngModel)]="newSource.volume" 
+              placeholder="e.g., 100GB, 1TB">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Update Frequency</label>
+          <select class="form-select" [(ngModel)]="newSource.frequency">
+            <option value="">Select frequency</option>
+            <option value="Real-time">Real-time</option>
+            <option value="Hourly">Hourly</option>
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+            <option value="Batch">Batch</option>
+            <option value="On-demand">On-demand</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea 
+            class="form-control" 
+            rows="3" 
+            [(ngModel)]="newSource.description"
+            placeholder="Brief description of the data source"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn-submit" 
+          (click)="addDataSource()" 
+          [disabled]="!newSource.name || !newSource.type">
+          Add Data Source
+        </button>
+      </div>
+    </div>
+  </div>
+}
