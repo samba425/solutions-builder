@@ -14,6 +14,44 @@ A modern web application for designing cloud architecture solutions using AI. Th
   - Step 2: Review Your Input (Comprehensive review with edit capabilities)
   - Step 3: Architecture Generation (AI-powered solution generation)
 
+- **Visual Architecture Canvas** ✨ NEW - **FULLY ENHANCED**
+  
+  **Option 1: Drawflow Canvas** (`/canvas`) - **WITH SHAPES & RENAMING**
+  - **Custom SVG Shapes**: Rectangle, Circle, Diamond, Cloud shapes ✨ NEW
+  - **Editable Node Labels**: Click any node to rename it inline ✨ NEW
+  - **Advanced SVG Rendering** with smooth animations
+  - **9 categories**: Custom Shapes + 8 cloud service categories
+  - **40+ cloud services** from AWS, Azure, GCP, and more
+  - **Enhanced Node Design**:
+    - Color-coded headers with gradient backgrounds
+    - Status indicators (CPU, Cloud icons)
+    - Category badges with provider colors
+    - Hover glow effects and pulse animations
+    - **Inline renaming** with contenteditable labels
+  - **Advanced Connections**:
+    - Smooth SVG curves with drop shadows
+    - Animated hover effects (connection highlighting)
+    - Selection animation with dashed lines
+    - Connection point highlighting
+  - **Interaction Features**:
+    - Right-click context menu (Delete, Duplicate)
+    - Mobile touch support for drag-and-drop
+    - Minimap navigator for large diagrams
+    - Selection ring with pulse animation
+  - **Persistence**: Save/Load localStorage, Export JSON/PNG
+  - **Controls**: Zoom, Pan, Collapsible categories
+  
+  **Option 2: Konva Canvas** (`/konva`)  
+  - Custom shape-based diagrams (Rectangle, Circle, Diamond, Cloud)
+  - Drag shapes from sidebar onto canvas
+  - Click to select, resize, and rotate with transformer
+  - Double-click shapes to edit labels
+  - Connect nodes with arrows (toggle "Connect Nodes" mode)
+  - Save/Load from browser localStorage
+  - Export as PNG using native Konva rendering
+  - Professional grid background
+  - Full shape manipulation (move, resize, rotate)
+
 - **Modern UI/UX**
   - Dark theme with gradient backgrounds
   - Responsive design
@@ -54,6 +92,8 @@ git --version
 | TypeScript | 5.6.2 | Programming language |
 | Bootstrap | 5.3.3 | CSS framework |
 | Bootstrap Icons | 1.11.0 | Icon library |
+| Drawflow | Latest | Visual diagram builder (Drawflow Canvas) |
+| Konva | Latest | 2D canvas library (Konva Canvas) |
 | Angular SSR | 21.0.4 | Server-side rendering |
 | RxJS | 7.8.1 | Reactive programming |
 
@@ -252,7 +292,49 @@ solutions-builder-ai/
 ### Step 3: Architecture
 1. Final review of all inputs
 2. Edit any section if needed
-3. Click "Generate Architecture" to create your solution
+3. Click "Open Canvas" to design visually, or
+4. Click "Generate Architecture" to create your solution
+
+### Architecture Canvas (Visual Designer)
+1. Navigate to `/canvas` or click "Open Canvas" from Step 3
+2. **Browse categories** in the left sidebar (click to expand/collapse):
+   - Infrastructure (AWS EC2, Azure VM, GCP Compute, Kubernetes, Docker)
+   - AI/ML Models (SageMaker, Azure ML, Vertex AI, TensorFlow, PyTorch, Hugging Face)
+   - Storage (S3, Azure Blob, Cloud Storage, MongoDB, PostgreSQL, Redis)
+   - Networking (API Gateway, Load Balancer, CDN, VPN, DNS)
+   - Serverless (Lambda, Functions, Vercel, Netlify)
+   - Data Processing (Spark, Kafka, Kinesis, Airflow, Databricks)
+   - Databases (RDS, Azure SQL, Cloud SQL, DynamoDB, Cosmos DB)
+   - Cisco Products (Catalyst, Webex, Meraki, SecureX, DNA Center)
+3. **Drag services** from the sidebar and drop on canvas
+4. **Connect nodes** using the small ports on each card
+5. **Right-click** any node for context menu (Duplicate/Delete)
+6. **Undo/Redo** your changes:
+   - Click "Undo" (⟲) to revert changes
+   - Click "Redo" (⟳) to restore undone changes
+   - All actions are tracked automatically (up to 50 steps)
+7. **Save your work**:
+   - Click "Save" to store in browser (persists across sessions)
+   - Click "Load" to restore saved work
+8. **Export options**:
+   - Export JSON - Download architecture data
+   - Export PNG - Save as image file
+9. **Zoom controls** to navigate large diagrams
+
+**Advanced Features:**
+- 📐 **Custom Shapes** - Rectangle, Circle, Diamond, Cloud (4 geometric shapes) ✨ NEW
+- ✏️ **Inline Renaming** - Click any node label to edit/rename ✨ NEW
+- 🎨 Color-coded by provider (AWS=Orange, Azure=Blue, GCP=Blue, etc.)
+- 📁 Collapsible categories - Click category header to collapse/expand
+- 💾 LocalStorage persistence - Work saved in browser
+- 🖱️ Right-click context menu - Quick duplicate or delete
+- 🖼️ PNG export - Share as image using html2canvas
+- ⚡ 40+ services across 9 categories (including shapes)
+- ↩️ **Undo/Redo** - Complete history tracking (up to 50 actions)
+- 🎯 Enhanced SVG connections with animations
+- 📱 Mobile touch support for drag & drop
+- 🗺️ Minimap navigator (top-right corner)
+- 🎪 Shape-specific gradients and styling
 
 ## 🐛 Troubleshooting
 

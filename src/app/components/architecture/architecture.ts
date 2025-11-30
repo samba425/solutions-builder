@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-architecture',
@@ -15,8 +16,22 @@ export class Architecture {
   isGenerating = false;
   architectureGenerated = false;
 
+  constructor(private router: Router) {}
+
   editStep(step: number) {
     this.goToStep.emit(step);
+  }
+
+  goBack() {
+    this.prevStep.emit();
+  }
+
+  openCanvas() {
+    this.router.navigate(['/canvas']);
+  }
+
+  openKonvaCanvas() {
+    this.router.navigate(['/konva']);
   }
 
   getFileIcon(type: string): string {

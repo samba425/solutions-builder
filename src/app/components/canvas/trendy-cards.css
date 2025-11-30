@@ -1,0 +1,671 @@
+/* Reference Node Styles from canvas copy */
+
+:host ::ng-deep .cloud-node {
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 4px solid;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  overflow: visible !important; /* Changed from hidden to visible to prevent clipping */
+  position: static !important;
+  min-width: 200px;
+  width: 200px;
+  min-height: 150px;
+  height: auto;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .cloud-node:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  /* Removed transform to prevent position shift */
+}
+
+:host ::ng-deep .node-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  position: relative;
+}
+
+:host ::ng-deep .node-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .node-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  flex: 1;
+}
+
+:host ::ng-deep .node-body {
+  padding: 12px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .node-category {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+:host ::ng-deep .node-description {
+  margin: 10px 0;
+  min-height: 40px;
+}
+
+:host ::ng-deep .node-description-text {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+  padding: 8px;
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  min-height: 40px;
+  max-height: 200px;
+  overflow-y: auto;
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .node-description-text:hover {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+:host ::ng-deep .node-description-text:focus {
+  outline: none;
+  background: rgba(15, 23, 42, 0.6);
+  border-color: #06b6d4;
+  color: #e2e8f0;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1);
+}
+
+:host ::ng-deep .node-description-text:empty:before {
+  content: attr(data-placeholder);
+  color: #64748b;
+  font-style: italic;
+}
+
+:host ::ng-deep .node-stats {
+  display: flex;
+  gap: 12px;
+}
+
+:host ::ng-deep .node-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+:host ::ng-deep .node-stat i {
+  font-size: 14px;
+  color: #06b6d4;
+}
+
+:host ::ng-deep .resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, #06b6d4 50%, #06b6d4 100%);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  pointer-events: auto;
+  border-radius: 0 0 12px 0;
+}
+
+:host ::ng-deep .resize-handle:hover {
+  opacity: 0.9;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, #22d3ee 50%, #22d3ee 100%);
+}
+
+:host ::ng-deep .resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #06b6d4;
+  border-bottom: 2px solid #06b6d4;
+  border-bottom-right-radius: 2px;
+}
+
+/* ============================================ */
+/* DRAWFLOW NODE BASE */
+/* ============================================ */
+
+:host ::ng-deep .drawflow .drawflow-node {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: auto !important;
+  overflow: visible !important;
+  position: absolute !important;
+  transition: none !important; /* Disable any transitions that might affect positioning */
+  z-index: 10 !important; /* Default higher z-index for regular nodes */
+}
+
+:host ::ng-deep .drawflow-node > .drawflow_content_node {
+  position: relative !important;
+  z-index: 1 !important;
+  overflow: visible !important;
+}
+
+/* ============================================ */
+/* CONNECTION POINTS - MULTI-DIRECTIONAL */
+/* ============================================ */
+
+/* Containers must cover full node area */
+:host ::ng-deep .drawflow .drawflow-node .inputs {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999 !important;
+}
+
+:host ::ng-deep .drawflow .drawflow-node .outputs {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999 !important;
+}
+
+/* Base styling for all connection points */
+:host ::ng-deep .drawflow-node .input,
+:host ::ng-deep .drawflow-node .output {
+  width: 16px !important;
+  height: 16px !important;
+  background: #06b6d4 !important;
+  border: 3px solid #0e7490 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.5) !important;
+  z-index: 10000 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+  cursor: crosshair !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Input 1 - LEFT side middle */
+:host ::ng-deep .drawflow-node .input_1 {
+  left: -7px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* Input 2 - TOP side center */
+:host ::ng-deep .drawflow-node .input_2 {
+  top: -7px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* Output 1 - RIGHT side middle */
+:host ::ng-deep .drawflow-node .output_1 {
+  right: -7px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: auto !important;
+  bottom: auto !important;
+}
+
+/* Output 2 - BOTTOM side center */
+:host ::ng-deep .drawflow-node .output_2 {
+  bottom: -7px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  top: auto !important;
+}
+
+/* Hover effects for connection points */
+:host ::ng-deep .drawflow-node .input:hover,
+:host ::ng-deep .drawflow-node .output:hover {
+  width: 20px !important;
+  height: 20px !important;
+  border-color: #22d3ee !important;
+  background: #22d3ee !important;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.9) !important;
+  z-index: 10001 !important;
+}
+
+/* ============================================ */
+/* CONNECTION LINES */
+/* ============================================ */
+
+:host ::ng-deep .drawflow .connection {
+  z-index: 5 !important;
+}
+
+:host ::ng-deep .drawflow .connection .main-path {
+  stroke: #06b6d4 !important;
+  stroke-width: 2.5px !important;
+  fill: none;
+  filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.3));
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .drawflow .connection .main-path:hover {
+  stroke: #22d3ee !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.5));
+  cursor: pointer;
+}
+
+:host ::ng-deep .drawflow .connection .point {
+  fill: #06b6d4 !important;
+  stroke: #0e7490 !important;
+  stroke-width: 2px;
+}
+
+/* ============================================ */
+/* CUSTOM SHAPES - User-Friendly Design */
+/* ============================================ */
+
+:host ::ng-deep .custom-shape {
+  background: rgba(30, 41, 59, 0.95);
+  border: 2px solid;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .custom-shape:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Resize handle for custom shapes */
+:host ::ng-deep .custom-shape .resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, #06b6d4 50%, #06b6d4 100%);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  pointer-events: auto;
+  border-radius: 0 0 8px 0;
+}
+
+:host ::ng-deep .custom-shape .resize-handle:hover {
+  opacity: 0.9;
+  background: linear-gradient(135deg, transparent 0%, transparent 50%, #22d3ee 50%, #22d3ee 100%);
+}
+
+:host ::ng-deep .custom-shape .resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #06b6d4;
+  border-bottom: 2px solid #06b6d4;
+  border-bottom-right-radius: 2px;
+}
+
+/* Shape Header - Like a title bar */
+:host ::ng-deep .shape-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+:host ::ng-deep .shape-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+:host ::ng-deep .shape-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  flex: 1;
+  outline: none;
+  border: 1px solid transparent;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .shape-title:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:host ::ng-deep .shape-title:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Shape Body - Content area for tasks */
+:host ::ng-deep .shape-body {
+  flex: 1;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+:host ::ng-deep .shape-task-area {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.6;
+  min-height: 60px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  outline: none;
+  transition: all 0.2s ease;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+:host ::ng-deep .shape-task-area:hover {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+:host ::ng-deep .shape-task-area:focus {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: #06b6d4;
+  color: #e2e8f0;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1);
+}
+
+:host ::ng-deep .shape-task-area:empty:before {
+  content: attr(data-placeholder);
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Rectangle Shape - Vertical layout */
+:host ::ng-deep .shape-rectangle {
+  border-radius: 8px;
+  width: 200px;
+  min-height: 150px;
+}
+
+/* Circle Shape - Compact circular design */
+:host ::ng-deep .shape-circle {
+  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+}
+
+:host ::ng-deep .shape-circle .shape-header {
+  border-bottom: none;
+  padding: 10px;
+  flex-direction: column;
+  text-align: center;
+}
+
+:host ::ng-deep .shape-circle .shape-title {
+  text-align: center;
+  font-size: 13px;
+}
+
+:host ::ng-deep .shape-circle .shape-body {
+  padding: 10px 14px;
+}
+
+:host ::ng-deep .shape-circle .shape-task-area {
+  font-size: 11px;
+  min-height: 50px;
+  padding: 8px;
+}
+
+/* Diamond Shape - Rotated with counter-rotated content */
+:host ::ng-deep .shape-diamond {
+  width: 180px;
+  height: 180px;
+  transform: rotate(45deg);
+  border-radius: 12px;
+}
+
+:host ::ng-deep .shape-diamond .shape-header,
+:host ::ng-deep .shape-diamond .shape-body {
+  transform: rotate(-45deg);
+}
+
+:host ::ng-deep .shape-diamond .shape-header {
+  border-bottom: none;
+  padding: 8px;
+  flex-direction: column;
+  align-items: center;
+}
+
+:host ::ng-deep .shape-diamond .shape-title {
+  text-align: center;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+:host ::ng-deep .shape-diamond .shape-body {
+  padding: 8px 12px;
+}
+
+:host ::ng-deep .shape-diamond .shape-task-area {
+  font-size: 10px;
+  min-height: 40px;
+  padding: 6px;
+}
+
+/* Start Shape - Rounded horizontal layout */
+:host ::ng-deep .shape-start {
+  border-radius: 60px;
+  width: 220px;
+  height: 100px;
+  border-width: 3px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.05));
+}
+
+:host ::ng-deep .shape-start .shape-header {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(22, 163, 74, 0.9)) !important;
+}
+
+/* End Shape - Rounded horizontal layout with double border effect */
+:host ::ng-deep .shape-end {
+  border-radius: 60px;
+  width: 220px;
+  height: 100px;
+  border-width: 3px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.05));
+  box-shadow: 
+    0 0 0 5px rgba(239, 68, 68, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+:host ::ng-deep .shape-end .shape-header {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.9)) !important;
+}
+
+/* Box Shape - Simple container for grouping tasks */
+:host ::ng-deep .shape-box {
+  border-radius: 8px;
+  width: 500px;
+  min-height: 400px;
+  border-width: 2px;
+  border-style: dashed;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  z-index: 0 !important; /* Keep box behind other elements */
+}
+
+:host ::ng-deep .drawflow-node.custom-shape-node.shape-box {
+  z-index: 0 !important; /* Ensure the entire node stays in background */
+}
+
+:host ::ng-deep .shape-box:hover {
+  border-style: solid;
+  box-shadow: 0 0 0 1px rgba(100, 116, 139, 0.3);
+  transform: none;
+}
+
+:host ::ng-deep .shape-box .shape-header {
+  background: rgba(100, 116, 139, 0.15) !important;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.3);
+  padding: 10px 16px;
+}
+
+:host ::ng-deep .shape-box .shape-icon {
+  font-size: 16px;
+  color: #94a3b8;
+}
+
+:host ::ng-deep .shape-box .shape-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+:host ::ng-deep .shape-box .shape-body {
+  padding: 20px;
+  min-height: 340px;
+}
+
+:host ::ng-deep .shape-box .shape-task-area {
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  min-height: 300px;
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+}
+
+:host ::ng-deep .shape-box .shape-task-area:hover {
+  background: rgba(15, 23, 42, 0.2);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+:host ::ng-deep .shape-box .shape-task-area:focus {
+  background: rgba(15, 23, 42, 0.3);
+  border-color: #64748b;
+  border-style: solid;
+}
+
+/* Container Shape - Large boundary box for grouping */
+:host ::ng-deep .shape-container {
+  border-radius: 12px;
+  width: 400px;
+  min-height: 300px;
+  border-width: 3px;
+  border-style: dashed;
+  background: rgba(30, 41, 59, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+:host ::ng-deep .shape-container .shape-header {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-bottom: 2px dashed rgba(148, 163, 184, 0.3);
+}
+
+:host ::ng-deep .shape-container .shape-task-area {
+  background: rgba(15, 23, 42, 0.2);
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  min-height: 200px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Zone Shape - Alternative boundary style */
+:host ::ng-deep .shape-zone {
+  border-radius: 16px;
+  width: 450px;
+  min-height: 320px;
+  border-width: 4px;
+  border-style: solid;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(59, 130, 246, 0.05));
+  box-shadow: 
+    0 0 0 8px rgba(99, 102, 241, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+:host ::ng-deep .shape-zone .shape-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(59, 130, 246, 0.5)) !important;
+  padding: 16px 20px;
+}
+
+:host ::ng-deep .shape-zone .shape-icon {
+  font-size: 24px;
+}
+
+:host ::ng-deep .shape-zone .shape-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+:host ::ng-deep .shape-zone .shape-task-area {
+  background: rgba(15, 23, 42, 0.3);
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  min-height: 220px;
+  padding: 16px;
+  font-size: 12px;
+}
+
+/* Adjust connection points for non-rectangular shapes */
+
+/* Diamond shape: Move inputs to top, outputs to bottom */
+:host ::ng-deep .shape-diamond ~ .inputs {
+  left: 50% !important;
+  top: 0 !important;
+  transform: translate(-50%, -7px) !important;
+}
+
+:host ::ng-deep .shape-diamond ~ .outputs {
+  left: 50% !important;
+  top: auto !important;
+  bottom: 0 !important;
+  transform: translate(-50%, 7px) !important;
+}

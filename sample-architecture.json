@@ -1,0 +1,90 @@
+{
+  "nodes": [
+    {
+      "id": "load-balancer",
+      "name": "Load Balancer",
+      "icon": "⚖️",
+      "color": "#0078D4",
+      "x": 100,
+      "y": 200
+    },
+    {
+      "id": "api-gateway",
+      "name": "API Gateway",
+      "icon": "🚪",
+      "color": "#FF9900",
+      "x": 400,
+      "y": 100
+    },
+    {
+      "id": "lambda-1",
+      "name": "AWS Lambda",
+      "icon": "⚡",
+      "color": "#FF9900",
+      "x": 700,
+      "y": 50
+    },
+    {
+      "id": "lambda-2",
+      "name": "AWS Lambda",
+      "icon": "⚡",
+      "color": "#FF9900",
+      "x": 700,
+      "y": 200
+    },
+    {
+      "id": "dynamodb",
+      "name": "DynamoDB",
+      "icon": "📦",
+      "color": "#FF9900",
+      "x": 1000,
+      "y": 125
+    },
+    {
+      "id": "s3",
+      "name": "AWS S3",
+      "icon": "📦",
+      "color": "#FF9900",
+      "x": 400,
+      "y": 300
+    },
+    {
+      "id": "sachin",
+      "name": "AWS sachin",
+      "icon": "📦",
+      "color": "#FF9900",
+      "x": 1400,
+      "y": 1300
+    }
+  ],
+  "connections": [
+    {
+      "from": "load-balancer",
+      "to": "api-gateway"
+    },
+    {
+      "from": "api-gateway",
+      "to": "lambda-1"
+    },
+    {
+      "from": "api-gateway",
+      "to": "lambda-2"
+    },
+    {
+      "from": "lambda-1",
+      "to": "dynamodb"
+    },
+    {
+      "from": "lambda-2",
+      "to": "dynamodb"
+    },
+    {
+      "from": "lambda-2",
+      "to": "s3"
+    },
+     {
+      "from": "s3",
+      "to": "sachin"
+    }
+  ]
+}

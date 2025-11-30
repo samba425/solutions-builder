@@ -1,0 +1,313 @@
+.canvas-container {
+  display: flex;
+  height: 100vh;
+  background: #1e293b;
+  color: white;
+}
+
+.sidebar {
+  width: 300px;
+  background: #0f172a;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #334155;
+}
+
+.sidebar-header h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.services-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+
+.service-category {
+  margin-bottom: 1rem;
+}
+
+
+.category-header {
+  padding: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.category-header:hover {
+  background: #1e293b;
+}
+
+.category-icon {
+  font-size: 0.75rem;
+}
+
+.category-items {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-item {
+  padding: 0.75rem;
+  background: #1e293b;
+  border-left: 3px solid;
+  border-radius: 6px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.service-item:hover {
+  background: #334155;
+  transform: translateX(4px);
+}
+
+.service-item:active {
+  cursor: grabbing;
+}
+
+.service-icon {
+  font-size: 1.5rem;
+}
+
+.service-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  padding: 1rem;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toolbar-status {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: #1e293b;
+  border-radius: 6px;
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.toolbar button {
+  padding: 0.5rem 1rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.toolbar button:hover:not(:disabled) {
+  background: #334155;
+  border-color: #3b82f6;
+}
+
+.toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar button.danger-btn:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.toolbar button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.toolbar button.primary-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.toolbar button.primary-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.selection-indicator {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+/* Search Bar */
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  background: #0a0e1a;
+}
+
+.drawflow-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #0a0e1a;
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Drawflow base styling - minimal overrides, let trendy-cards.css handle the rest */
+:host ::ng-deep .drawflow {
+  background: transparent !important;
+  position: relative;
+}
+
+:host ::ng-deep .drawflow .drawflow-node {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+:host ::ng-deep .drawflow .drawflow-node.selected {
+  background: transparent;
+  border: none;
+}
+
+
+/* Minimap */
+.minimap {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.minimap-header {
+  padding: 0.5rem;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.minimap-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+}
+
+.minimap-close:hover {
+  color: white;
+}
+
+.minimap-content {
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.context-menu-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+  border-bottom: 1px solid #334155;
+}
+
+.context-menu-item:last-child {
+  border-bottom: none;
+}
+
+.context-menu-item:hover {
+  background: #334155;
+}
+
+.context-menu-item.danger:hover {
+  background: #dc2626;
+}
+
+/* END OF CANVAS.COMPONENT.CSS - All card styles are now in trendy-cards.css */

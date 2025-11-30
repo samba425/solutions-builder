@@ -1,0 +1,159 @@
+<div class="canvas-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Services</h2>
+      <input 
+        type="text" 
+        placeholder="Search services..." 
+        [(ngModel)]="searchTerm"
+        class="search-input"
+      />
+    </div>
+
+    <div class="services-list">
+      @for (category of filteredCategories(); track category.name) {
+        <div class="service-category">
+          <div class="category-header" (click)="toggleCategory(category)">
+            <span class="category-icon">{{ category.collapsed ? '▶' : '▼' }}</span>
+            <span>{{ category.name }}</span>
+          </div>
+          
+          @if (!category.collapsed) {
+            <div class="category-items">
+              @for (service of category.items; track service.name) {
+                <div 
+                  class="service-item"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, service)"
+                  [style.border-left-color]="service.color"
+                >
+                  <span class="service-icon">{{ service.icon }}</span>
+                  <span class="service-name">{{ service.name }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Main Canvas -->
+  <div class="main-content">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button (click)="autoLayoutNodes()" title="Auto Layout - Organize All Nodes" class="primary-btn">
+          ✨ Auto Layout
+        </button>
+        <button (click)="refreshCanvas()" title="Refresh Canvas - Fix Overlapping Nodes">
+          🔄 Refresh
+        </button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="undo()" [disabled]="!canUndo" title="Undo (Ctrl+Z)">↶ Undo</button>
+        <button (click)="redo()" [disabled]="!canRedo" title="Redo (Ctrl+Shift+Z)">↷ Redo</button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="zoomIn()" title="Zoom In">🔍+</button>
+        <button (click)="zoomOut()" title="Zoom Out">🔍-</button>
+        <button (click)="zoomReset()" title="Reset Zoom">↺</button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="toggleGrid()" title="Toggle Grid">
+          {{ showGrid ? '⊞' : '⊡' }} Grid
+        </button>
+        <button (click)="toggleSnapToGrid()" [class.active]="snapToGrid" title="Toggle Snap to Grid">
+          🧲 Snap
+        </button>
+        <button (click)="snapSelectedNodesToGrid()" [disabled]="selectedNodes.size === 0" title="Snap Selected to Grid">
+          📐 Align Grid
+        </button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="alignNodesHorizontal()" [disabled]="selectedNodes.size < 2" title="Align Horizontal">
+          ↔️ H-Align
+        </button>
+        <button (click)="alignNodesVertical()" [disabled]="selectedNodes.size < 2" title="Align Vertical">
+          ↕️ V-Align
+        </button>
+        <button (click)="distributeNodesHorizontal()" [disabled]="selectedNodes.size < 3" title="Distribute Horizontal">
+          ⟷ Distribute
+        </button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="toggleMinimap()" title="Toggle Minimap">
+          {{ showMinimap ? '🗺️' : '🗺️' }} Map
+        </button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="saveToLocalStorage()" title="Save to Browser">💾 Save</button>
+        <button (click)="loadFromLocalStorage()" title="Load from Browser">📂 Load</button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="importDiagram()" title="Import JSON">📥 Import</button>
+        <button (click)="exportDiagram()" title="Export JSON">📤 Export</button>
+        <button (click)="exportAsPNG()" title="Export as PNG">🖼️ PNG</button>
+        <button (click)="refreshCanvas()" title="Refresh Canvas - Fix Overlapping Nodes">🔄 Refresh</button>
+      </div>
+      
+      <div class="toolbar-group">
+        <button (click)="clearCanvas()" title="Clear Canvas" class="danger-btn">🗑️ Clear</button>
+      </div>
+      
+      @if (selectedNodes.size > 0) {
+        <div class="selection-indicator">
+          {{ selectedNodes.size }} node(s) selected
+        </div>
+      }
+      
+      <div class="toolbar-status">
+        @if (lastSaved) {
+          <span class="status-text">💾 Last saved: {{ lastSaved }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-wrapper">
+      <div #drawflowCanvas id="drawflow" class="drawflow-canvas"></div>
+      
+      <!-- Minimap -->
+      @if (showMinimap) {
+        <div class="minimap">
+          <div class="minimap-header">
+            <span>Map</span>
+            <button (click)="toggleMinimap()" class="minimap-close">✕</button>
+          </div>
+          <div class="minimap-content">
+            <small>Minimap view (coming soon)</small>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  @if (contextMenu.visible) {
+    <div 
+      class="context-menu" 
+      [style.left.px]="contextMenu.x" 
+      [style.top.px]="contextMenu.y"
+    >
+      <div class="context-menu-item" (click)="duplicateNode()">
+        <span>📋 Duplicate</span>
+      </div>
+      <div class="context-menu-item danger" (click)="deleteNode()">
+        <span>🗑️ Delete</span>
+      </div>
+    </div>
+  }
+</div>

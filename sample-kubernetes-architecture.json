@@ -1,0 +1,126 @@
+{
+  "nodes": [
+    {
+      "id": "user",
+      "name": "User",
+      "icon": "👤",
+      "color": "#10B981",
+      "x": 50,
+      "y": 250
+    },
+    {
+      "id": "cdn",
+      "name": "CDN",
+      "icon": "🌐",
+      "color": "#4285F4",
+      "x": 250,
+      "y": 250
+    },
+    {
+      "id": "load-balancer",
+      "name": "Load Balancer",
+      "icon": "⚖️",
+      "color": "#0078D4",
+      "x": 450,
+      "y": 250
+    },
+    {
+      "id": "kubernetes",
+      "name": "Kubernetes Cluster",
+      "icon": "☸️",
+      "color": "#326CE5",
+      "x": 700,
+      "y": 250
+    },
+    {
+      "id": "auth-service",
+      "name": "Auth Service",
+      "icon": "🔐",
+      "color": "#EF4444",
+      "x": 1000,
+      "y": 100
+    },
+    {
+      "id": "api-service",
+      "name": "API Service",
+      "icon": "🚀",
+      "color": "#10B981",
+      "x": 1000,
+      "y": 250
+    },
+    {
+      "id": "data-service",
+      "name": "Data Service",
+      "icon": "💾",
+      "color": "#F59E0B",
+      "x": 1000,
+      "y": 400
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL",
+      "icon": "🐘",
+      "color": "#336791",
+      "x": 1300,
+      "y": 150
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB",
+      "icon": "🍃",
+      "color": "#47A248",
+      "x": 1300,
+      "y": 300
+    },
+    {
+      "id": "redis",
+      "name": "Redis Cache",
+      "icon": "⚡",
+      "color": "#DC382D",
+      "x": 1300,
+      "y": 450
+    }
+  ],
+  "connections": [
+    {
+      "from": "user",
+      "to": "cdn"
+    },
+    {
+      "from": "cdn",
+      "to": "load-balancer"
+    },
+    {
+      "from": "load-balancer",
+      "to": "kubernetes"
+    },
+    {
+      "from": "kubernetes",
+      "to": "auth-service"
+    },
+    {
+      "from": "kubernetes",
+      "to": "api-service"
+    },
+    {
+      "from": "kubernetes",
+      "to": "data-service"
+    },
+    {
+      "from": "auth-service",
+      "to": "postgresql"
+    },
+    {
+      "from": "api-service",
+      "to": "mongodb"
+    },
+    {
+      "from": "data-service",
+      "to": "mongodb"
+    },
+    {
+      "from": "data-service",
+      "to": "redis"
+    }
+  ]
+}
