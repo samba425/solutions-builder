@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ProblemInput } from '../problem-input/problem-input';
 import { Review } from '../review/review';
 import { Architecture } from '../architecture/architecture';
+import { ChatbotComponent } from '../chatbot/chatbot.component';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, ProblemInput, Review, Architecture],
+  imports: [CommonModule, ProblemInput, Review, Architecture, ChatbotComponent],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

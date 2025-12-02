@@ -1,0 +1,109 @@
+<!-- Collapsed Toggle Button -->
+<div class="chatbot-toggle" *ngIf="!isOpen" (click)="toggleChat()">
+  <div class="toggle-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </div>
+  <span class="toggle-text">Ask the AI Assistant a question</span>
+  <svg class="toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+</div>
+
+<!-- Expanded Chat Window -->
+<div class="chatbot-window" *ngIf="isOpen">
+  <!-- Chat Header -->
+  <div class="chat-header" (click)="toggleChat()">
+    <div class="header-left">
+      <div class="bot-avatar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="4" width="18" height="12" rx="2"/>
+          <circle cx="8" cy="10" r="1.5"/>
+          <circle cx="16" cy="10" r="1.5"/>
+          <path d="M9 19h6"/>
+          <path d="M12 16v3"/>
+        </svg>
+      </div>
+      <div class="header-info">
+        <span class="bot-name">
+          AI Assistant
+          <svg class="sparkle" width="12" height="12" viewBox="0 0 24 24" fill="#3B82F6">
+            <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/>
+          </svg>
+        </span>
+        <span class="bot-status" *ngIf="isTyping">
+          <span class="status-dot"></span>
+          Now checking architecture...
+        </span>
+        <span class="bot-status online" *ngIf="!isTyping">
+          <span class="status-dot"></span>
+          Online
+        </span>
+      </div>
+    </div>
+    <svg class="collapse-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </div>
+
+  <!-- Chat Messages -->
+  <div class="chat-messages" #messagesContainer>
+    <div 
+      *ngFor="let message of messages" 
+      class="message" 
+      [class.bot-message]="message.isBot" 
+      [class.user-message]="!message.isBot">
+      
+      <!-- Bot Avatar -->
+      <div class="message-avatar" *ngIf="message.isBot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="4" width="18" height="12" rx="2"/>
+          <circle cx="8" cy="10" r="1.5"/>
+          <circle cx="16" cy="10" r="1.5"/>
+        </svg>
+      </div>
+
+      <!-- Message Content -->
+      <div class="message-content">
+        <p>{{ message.text }}</p>
+        <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div class="message bot-message" *ngIf="isTyping">
+      <div class="message-avatar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="4" width="18" height="12" rx="2"/>
+          <circle cx="8" cy="10" r="1.5"/>
+          <circle cx="16" cy="10" r="1.5"/>
+        </svg>
+      </div>
+      <div class="message-content typing">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Input -->
+  <div class="chat-input">
+    <input 
+      type="text" 
+      [(ngModel)]="userInput"
+      placeholder="Ask the AI Assistant a question..."
+      (keypress)="onKeyPress($event)">
+    <button 
+      class="send-btn" 
+      (click)="sendMessage()" 
+      [disabled]="!userInput.trim()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+</div>

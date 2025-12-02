@@ -18,7 +18,7 @@
 
     <!-- Main Content Area -->
     <div class="wizard-main">
-      @if (currentStep !== 2) {
+      @if (currentStep == 1) {
         <h2 class="wizard-title">Design Your Cloud Architecture</h2>
         <p class="wizard-subtitle">Provide your technical requirements and let AI generate a comprehensive cloud solution architecture</p>
       }
@@ -34,5 +34,8 @@
         <app-architecture (prevStep)="goToStep(2)" (goToStep)="goToStep($event)" [formData]="formData"></app-architecture>
       }
     </div>
+
+      <!-- Chatbot -->
+  <app-chatbot></app-chatbot>
   </div>
 </div>

@@ -1,0 +1,190 @@
+{
+  "nodes": [
+    {
+      "id": "cdn-001",
+      "name": "CloudFront",
+      "icon": "fab fa-aws",
+      "color": "#FF9900",
+      "x": 400,
+      "y": 50,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "AWS CloudFront CDN",
+        "provider": "AWS"
+      }
+    },
+    {
+      "id": "lb-001",
+      "name": "Load Balancer",
+      "icon": "fas fa-balance-scale",
+      "color": "#06b6d4",
+      "x": 400,
+      "y": 250,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "Application Load Balancer",
+        "provider": "AWS"
+      }
+    },
+    {
+      "id": "web-001",
+      "name": "Web Server 1",
+      "icon": "fab fa-react",
+      "color": "#61DAFB",
+      "x": 250,
+      "y": 450,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "React frontend instance 1",
+        "provider": "React"
+      }
+    },
+    {
+      "id": "web-002",
+      "name": "Web Server 2",
+      "icon": "fab fa-react",
+      "color": "#61DAFB",
+      "x": 550,
+      "y": 450,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "React frontend instance 2",
+        "provider": "React"
+      }
+    },
+    {
+      "id": "api-001",
+      "name": "API Gateway",
+      "icon": "fas fa-door-open",
+      "color": "#8b5cf6",
+      "x": 400,
+      "y": 650,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "AWS API Gateway",
+        "provider": "AWS"
+      }
+    },
+    {
+      "id": "lambda-001",
+      "name": "Lambda Functions",
+      "icon": "fas fa-bolt",
+      "color": "#FF9900",
+      "x": 250,
+      "y": 850,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "AWS Lambda serverless functions",
+        "provider": "AWS Lambda"
+      }
+    },
+    {
+      "id": "db-001",
+      "name": "RDS Database",
+      "icon": "fas fa-database",
+      "color": "#3b82f6",
+      "x": 550,
+      "y": 850,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "AWS RDS PostgreSQL",
+        "provider": "AWS RDS"
+      }
+    },
+    {
+      "id": "cache-001",
+      "name": "Redis Cache",
+      "icon": "fas fa-memory",
+      "color": "#DC382D",
+      "x": 400,
+      "y": 1050,
+      "width": 140,
+      "height": 140,
+      "componentProperties": {
+        "description": "Redis caching layer",
+        "provider": "Redis"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "cdn-001",
+      "to": "lb-001",
+      "label": "HTTPS",
+      "color": "#06b6d4",
+      "style": "solid",
+      "width": 3
+    },
+    {
+      "from": "lb-001",
+      "to": "web-001",
+      "label": "Route",
+      "color": "#06b6d4",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "lb-001",
+      "to": "web-002",
+      "label": "Route",
+      "color": "#06b6d4",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "web-001",
+      "to": "api-001",
+      "label": "API Call",
+      "color": "#8b5cf6",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "web-002",
+      "to": "api-001",
+      "label": "API Call",
+      "color": "#8b5cf6",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "api-001",
+      "to": "lambda-001",
+      "label": "Invoke",
+      "color": "#FF9900",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "lambda-001",
+      "to": "db-001",
+      "label": "Query",
+      "color": "#3b82f6",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "lambda-001",
+      "to": "cache-001",
+      "label": "Cache",
+      "color": "#DC382D",
+      "style": "dashed",
+      "width": 2
+    },
+    {
+      "from": "api-001",
+      "to": "db-001",
+      "label": "Direct Query",
+      "color": "#3b82f6",
+      "style": "dotted",
+      "width": 1
+    }
+  ]
+}

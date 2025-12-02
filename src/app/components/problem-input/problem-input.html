@@ -4,16 +4,9 @@
     <label class="form-label">Industry Category <span class="text-danger">*</span></label>
     <select class="form-select" [(ngModel)]="formData.industry">
       <option value="">Select your industry</option>
-      <option value="healthcare">Healthcare</option>
-      <option value="finance">Finance & Banking</option>
-      <option value="retail">Retail & E-commerce</option>
-      <option value="manufacturing">Manufacturing</option>
-      <option value="education">Education</option>
-      <option value="technology">Technology</option>
-      <option value="logistics">Logistics & Transportation</option>
-      <option value="media">Media & Entertainment</option>
-      <option value="government">Government</option>
-      <option value="other">Other</option>
+      @for (industry of industries; track industry.value) {
+        <option [value]="industry.value">{{ industry.label }}</option>
+      }
     </select>
   </div>
 
@@ -32,44 +25,36 @@
   <div class="form-group mb-2">
     <label class="form-label">Additional Context</label>
     <div class="additional-context-grid">
-      <button type="button" class="context-btn" [class.active]="isContextSelected('document')" (click)="toggleContext('document')">
-        <i class="bi bi-file-text"></i>
-        <span>Document</span>
-      </button>
-      <button type="button" class="context-btn" [class.active]="isContextSelected('pdf')" (click)="toggleContext('pdf')">
-        <i class="bi bi-file-pdf"></i>
-        <span>PDF</span>
-      </button>
-      <button type="button" class="context-btn" [class.active]="isContextSelected('audio')" (click)="toggleContext('audio')">
-        <i class="bi bi-mic"></i>
-        <span>Audio</span>
-      </button>
-      <button type="button" class="context-btn" [class.active]="isContextSelected('video')" (click)="toggleContext('video')">
-        <i class="bi bi-camera-video"></i>
-        <span>Video</span>
-      </button>
+      @for (context of contextTypes; track context.value) {
+        <button type="button" class="context-btn" [class.active]="isContextSelected(context.value)" (click)="toggleContext(context.value)">
+          <i class="bi" [class]="context.icon"></i>
+          <span>{{ context.label }}</span>
+        </button>
+      }
     </div>
   </div>
 
   <!-- Uploaded Files Display - Only show when context is selected -->
-  @if (formData.additionalContext && formData.additionalContext.length > 0) {
+  @if (uploadedFilesList.length > 0) {
     <div class="form-group mb-2">
       <div class="uploaded-files-list">
-        @for (context of formData.additionalContext; track context) {
-          <div class="uploaded-file-item">
-            <div class="d-flex align-items-center gap-3">
-              <div class="file-icon">
-                <i class="bi" [class]="getFileIcon(context)"></i>
+        @for (contextType of formData.additionalContext; track contextType) {
+          @for (file of getFilesForType(contextType); track file.name) {
+            <div class="uploaded-file-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="file-icon">
+                  <i class="bi" [class]="getFileIcon(contextType)"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="file-name">{{ file.name }}</div>
+                  <div class="file-size">{{ formatFileSize(file.size) }}</div>
+                </div>
+                <button class="btn-remove-file" (click)="removeFile(contextType, file.name)">
+                  <i class="bi bi-x"></i>
+                </button>
               </div>
-              <div class="flex-grow-1">
-                <div class="file-name">sample-file.{{ context === 'document' ? 'docx' : context }}</div>
-                <div class="file-size">2.5 MB</div>
-              </div>
-              <button class="btn-remove-file" (click)="toggleContext(context)">
-                <i class="bi bi-x"></i>
-              </button>
             </div>
-          </div>
+          }
         }
       </div>
     </div>
@@ -120,7 +105,7 @@
   <!-- Continue Button -->
   <div class="navigation-buttons">
     <div class="w-100">
-      <button type="button" class="btn-continue w-100" (click)="nextStep.emit()" [disabled]="!formData.industry">
+      <button type="button" class="btn-continue w-100" (click)="onContinue()" [disabled]="!formData.industry">
         <i class="bi bi-gear"></i> Continue to Preview
       </button>
       <p class="text-center text-muted small mt-3 mb-0">Review your inputs before generating the architecture</p>
@@ -156,13 +141,9 @@
             <label class="form-label">Type <span class="text-danger">*</span></label>
             <select class="form-select" [(ngModel)]="newSource.type">
               <option value="">Select type</option>
-              <option value="Database">Database</option>
-              <option value="API">API</option>
-              <option value="File Storage">File Storage</option>
-              <option value="Stream">Stream</option>
-              <option value="Data Warehouse">Data Warehouse</option>
-              <option value="Data Lake">Data Lake</option>
-              <option value="Third-party Service">Third-party Service</option>
+              @for (type of dataSourceTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
             </select>
           </div>
         </div>
@@ -190,13 +171,9 @@
           <label class="form-label">Update Frequency</label>
           <select class="form-select" [(ngModel)]="newSource.frequency">
             <option value="">Select frequency</option>
-            <option value="Real-time">Real-time</option>
-            <option value="Hourly">Hourly</option>
-            <option value="Daily">Daily</option>
-            <option value="Weekly">Weekly</option>
-            <option value="Monthly">Monthly</option>
-            <option value="Batch">Batch</option>
-            <option value="On-demand">On-demand</option>
+            @for (frequency of updateFrequencies; track frequency.value) {
+              <option [value]="frequency.value">{{ frequency.label }}</option>
+            }
           </select>
         </div>
 

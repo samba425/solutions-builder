@@ -1,0 +1,241 @@
+<div class="architecture-builder-container" *ngIf="config">
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'architecture'"
+      (click)="setActiveTab('architecture')">
+      Architecture
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'technology'"
+      (click)="setActiveTab('technology')">
+      Technology Stack
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'hardware'"
+      (click)="setActiveTab('hardware')">
+      Hardware Specs
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'cisco'"
+      (click)="setActiveTab('cisco')">
+      Cisco Integration
+    </button>
+  </div>
+
+  <!-- Architecture Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'architecture'">
+    <div class="content-grid">
+      <!-- Architecture Framework -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🏗️</span>
+          <h3>Architecture Framework</h3>
+        </div>
+        <div class="card-body">
+          <div class="section-label">Recommended Pattern</div>
+          <div class="pattern-text">{{ config.architecture.pattern }}</div>
+
+          <div class="section-label" style="margin-top: 24px;">Core Components</div>
+          <div class="components-list">
+            <div *ngFor="let component of config.architecture.components" class="component-item">
+              <span class="check-icon">✓</span>
+              <span>{{ component.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Flow Architecture -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🔄</span>
+          <h3>Data Flow Architecture</h3>
+        </div>
+        <div class="card-body">
+          <div class="flow-steps">
+            <div *ngFor="let step of config.architecture.dataFlow" class="flow-step">
+              <div class="step-number">{{ step.number }}</div>
+              <div class="step-name">{{ step.name }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLM Model Recommendations -->
+    <div class="card full-width">
+      <div class="card-header">
+        <span class="icon">⚡</span>
+        <h3>LLM Model Recommendations</h3>
+        <p class="subtitle">Suggested models optimized for different aspects of your use case</p>
+      </div>
+      <div class="card-body">
+        <div class="models-grid">
+          <div *ngFor="let model of config.architecture.llmModels" class="model-card">
+            <div class="model-header">
+              <div>
+                <h4>{{ model.name }}</h4>
+                <div class="model-provider">{{ model.provider }}</div>
+              </div>
+              <span class="model-badge">{{ model.use }}</span>
+            </div>
+            <div class="model-description">{{ model.description }}</div>
+            <div class="model-specs">
+              <span class="spec-item">{{ model.contextSize }}</span>
+              <span class="spec-separator">•</span>
+              <span class="spec-item">{{ model.temperature }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technology Stack Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'technology'">
+    <div class="card full-width">
+      <div class="card-header">
+        <span class="icon">📚</span>
+        <h3>Recommended Technology Stack</h3>
+        <p class="subtitle">AI frameworks, libraries, and tools optimized for your requirements</p>
+      </div>
+      <div class="card-body">
+        <div class="tech-stack-list">
+          <div *ngFor="let tech of config.technology.stack" class="tech-item">
+            <div class="tech-category">{{ tech.category }}</div>
+            <div class="tech-name">{{ tech.name }}</div>
+            <div class="tech-description">{{ tech.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full-width">
+      <div class="card-header">
+        <h3>Implementation Notes</h3>
+      </div>
+      <div class="card-body">
+        <div class="notes-list">
+          <div *ngFor="let note of config.technology.implementationNotes" class="note-item">
+            <span class="check-icon">✓</span>
+            <div>
+              <strong>{{ note.title }}</strong><br>
+              {{ note.description }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hardware Specs Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'hardware'">
+    <div class="content-grid">
+      <!-- Cisco UCS Configuration -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">🖥️</span>
+          <h3>Cisco UCS Configuration</h3>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let spec of config.hardware.specs" class="spec-section">
+            <i class="bi spec-icon" [ngClass]="spec.icon"></i>
+            <div>
+              <div class="spec-label">{{ spec.label }}</div>
+              <div class="spec-value">{{ spec.value }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU Requirements -->
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">⚡</span>
+          <h3>GPU Requirements</h3>
+        </div>
+        <div class="card-body">
+          <div class="gpu-config">
+            <div class="spec-label">GPU Configuration</div>
+            <div class="gpu-value">{{ config.hardware.gpu.config }}</div>
+          </div>
+
+          <div class="spec-label" style="margin-top: 24px;">GPU Selection Rationale</div>
+          <ul class="rationale-list">
+            <li *ngFor="let item of config.hardware.gpu.rationale">{{ item }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Infrastructure Recommendations -->
+    <div class="card full-width">
+      <div class="card-header">
+        <h3>Infrastructure Recommendations</h3>
+      </div>
+      <div class="card-body">
+        <div class="infrastructure-grid">
+          <div *ngFor="let infra of config.hardware.infrastructure" class="infra-card">
+            <h4>{{ infra.title }}</h4>
+            <p>{{ infra.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cisco Integration Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'cisco'">
+    <div class="card full-width">
+      <div class="card-header">
+        <span class="icon">🔧</span>
+        <h3>Cisco Tool Integration Points</h3>
+        <p class="subtitle">Recommended integrations with Cisco ecosystem tools</p>
+      </div>
+      <div class="card-body">
+        <div class="cisco-tools-list">
+          <div *ngFor="let tool of config.cisco.tools" class="cisco-tool">
+            <div class="tool-icon">🔷</div>
+            <div class="tool-content">
+              <h4>{{ tool.name }}</h4>
+              <div class="tool-description">{{ tool.description }}</div>
+              <div class="config-details">
+                <strong>Configuration Details</strong><br>
+                {{ tool.configDetails }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full-width">
+      <div class="card-header">
+        <h3>Integration Architecture</h3>
+      </div>
+      <div class="card-body">
+        <div class="integration-points">
+          <div *ngFor="let point of config.cisco.integrationPoints" class="integration-point" [style.border-left-color]="point.color">
+            <div class="point-number" [style.background-color]="point.color"></div>
+            <div class="point-content">
+              <h4>{{ point.title }}</h4>
+              <p>{{ point.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Button -->
+  <div class="export-section">
+    <button class="export-btn" (click)="exportConfiguration()">
+      📄 Export Configuration
+    </button>
+  </div>
+</div>

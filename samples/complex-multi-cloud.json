@@ -1,0 +1,511 @@
+{
+  "nodes": [
+    {
+      "id": "group-frontend",
+      "name": "Frontend Tier",
+      "isGroup": true,
+      "groupName": "Frontend Tier",
+      "color": "#3b82f6",
+      "x": 100,
+      "y": 50,
+      "width": 700,
+      "height": 300,
+      "componentProperties": {
+        "description": "Frontend services and CDN",
+        "tier": "Presentation"
+      }
+    },
+    {
+      "id": "cdn-cloudflare",
+      "name": "Cloudflare CDN",
+      "icon": "fas fa-cloud",
+      "color": "#F38020",
+      "x": 150,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-frontend",
+      "componentProperties": {
+        "description": "Global CDN",
+        "provider": "Cloudflare"
+      }
+    },
+    {
+      "id": "web-react-1",
+      "name": "React App 1",
+      "icon": "fab fa-react",
+      "color": "#61DAFB",
+      "x": 350,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-frontend",
+      "componentProperties": {
+        "description": "React frontend instance",
+        "provider": "React"
+      }
+    },
+    {
+      "id": "web-react-2",
+      "name": "React App 2",
+      "icon": "fab fa-react",
+      "color": "#61DAFB",
+      "x": 550,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-frontend",
+      "componentProperties": {
+        "description": "React frontend instance",
+        "provider": "React"
+      }
+    },
+    {
+      "id": "group-api",
+      "name": "API Layer",
+      "isGroup": true,
+      "groupName": "API Layer",
+      "color": "#8b5cf6",
+      "x": 100,
+      "y": 400,
+      "width": 700,
+      "height": 300,
+      "componentProperties": {
+        "description": "API services and gateway",
+        "tier": "Application"
+      }
+    },
+    {
+      "id": "api-gateway-aws",
+      "name": "AWS API Gateway",
+      "icon": "fab fa-aws",
+      "color": "#FF9900",
+      "x": 150,
+      "y": 450,
+      "width": 120,
+      "height": 120,
+      "parent": "group-api",
+      "componentProperties": {
+        "description": "AWS API Gateway",
+        "provider": "AWS"
+      }
+    },
+    {
+      "id": "node-service-1",
+      "name": "Node.js Service",
+      "icon": "fab fa-node",
+      "color": "#68A063",
+      "x": 350,
+      "y": 450,
+      "width": 120,
+      "height": 120,
+      "parent": "group-api",
+      "componentProperties": {
+        "description": "Node.js microservice",
+        "provider": "Node.js"
+      }
+    },
+    {
+      "id": "python-service",
+      "name": "Python Service",
+      "icon": "fab fa-python",
+      "color": "#3776AB",
+      "x": 550,
+      "y": 450,
+      "width": 120,
+      "height": 120,
+      "parent": "group-api",
+      "componentProperties": {
+        "description": "Python Flask API",
+        "provider": "Python"
+      }
+    },
+    {
+      "id": "group-data",
+      "name": "Data Layer",
+      "isGroup": true,
+      "groupName": "Data Layer",
+      "color": "#10b981",
+      "x": 950,
+      "y": 50,
+      "width": 600,
+      "height": 650,
+      "componentProperties": {
+        "description": "Databases and storage",
+        "tier": "Data"
+      }
+    },
+    {
+      "id": "postgres-rds",
+      "name": "AWS RDS",
+      "icon": "fas fa-database",
+      "color": "#336791",
+      "x": 1000,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "PostgreSQL on RDS",
+        "provider": "AWS RDS"
+      }
+    },
+    {
+      "id": "mongo-atlas",
+      "name": "MongoDB Atlas",
+      "icon": "fas fa-leaf",
+      "color": "#47A248",
+      "x": 1200,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "MongoDB Atlas",
+        "provider": "MongoDB"
+      }
+    },
+    {
+      "id": "redis-cache",
+      "name": "Redis",
+      "icon": "fas fa-memory",
+      "color": "#DC382D",
+      "x": 1400,
+      "y": 100,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "Redis cache",
+        "provider": "Redis"
+      }
+    },
+    {
+      "id": "s3-storage",
+      "name": "AWS S3",
+      "icon": "fab fa-aws",
+      "color": "#569A31",
+      "x": 1000,
+      "y": 280,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "S3 object storage",
+        "provider": "AWS S3"
+      }
+    },
+    {
+      "id": "gcs-storage",
+      "name": "Google Cloud Storage",
+      "icon": "fab fa-google",
+      "color": "#4285F4",
+      "x": 1200,
+      "y": 280,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "GCS bucket",
+        "provider": "Google Cloud"
+      }
+    },
+    {
+      "id": "elasticsearch",
+      "name": "Elasticsearch",
+      "icon": "fas fa-search",
+      "color": "#FEC514",
+      "x": 1100,
+      "y": 480,
+      "width": 120,
+      "height": 120,
+      "parent": "group-data",
+      "componentProperties": {
+        "description": "Search and analytics",
+        "provider": "Elasticsearch"
+      }
+    },
+    {
+      "id": "group-monitoring",
+      "name": "Monitoring & Analytics",
+      "isGroup": true,
+      "groupName": "Monitoring & Analytics",
+      "color": "#f59e0b",
+      "x": 100,
+      "y": 750,
+      "width": 700,
+      "height": 250,
+      "componentProperties": {
+        "description": "Monitoring and analytics services",
+        "tier": "Operations"
+      }
+    },
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "icon": "fas fa-chart-line",
+      "color": "#E6522C",
+      "x": 150,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-monitoring",
+      "componentProperties": {
+        "description": "Metrics and monitoring",
+        "provider": "Prometheus"
+      }
+    },
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "icon": "fas fa-chart-bar",
+      "color": "#F46800",
+      "x": 350,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-monitoring",
+      "componentProperties": {
+        "description": "Dashboards and visualization",
+        "provider": "Grafana"
+      }
+    },
+    {
+      "id": "datadog",
+      "name": "Datadog",
+      "icon": "fas fa-dog",
+      "color": "#632CA6",
+      "x": 550,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-monitoring",
+      "componentProperties": {
+        "description": "APM and logging",
+        "provider": "Datadog"
+      }
+    },
+    {
+      "id": "group-container",
+      "name": "Container Orchestration",
+      "isGroup": true,
+      "groupName": "Container Orchestration",
+      "color": "#06b6d4",
+      "x": 950,
+      "y": 750,
+      "width": 600,
+      "height": 250,
+      "componentProperties": {
+        "description": "Kubernetes and containers",
+        "tier": "Infrastructure"
+      }
+    },
+    {
+      "id": "k8s-cluster",
+      "name": "Kubernetes",
+      "icon": "fas fa-dharmachakra",
+      "color": "#326CE5",
+      "x": 1000,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-container",
+      "componentProperties": {
+        "description": "K8s cluster",
+        "provider": "Kubernetes"
+      }
+    },
+    {
+      "id": "docker-registry",
+      "name": "Docker Registry",
+      "icon": "fab fa-docker",
+      "color": "#2496ED",
+      "x": 1200,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-container",
+      "componentProperties": {
+        "description": "Container registry",
+        "provider": "Docker"
+      }
+    },
+    {
+      "id": "helm",
+      "name": "Helm",
+      "icon": "fas fa-ship",
+      "color": "#0F1689",
+      "x": 1400,
+      "y": 800,
+      "width": 120,
+      "height": 120,
+      "parent": "group-container",
+      "componentProperties": {
+        "description": "Package manager",
+        "provider": "Helm"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "cdn-cloudflare",
+      "to": "web-react-1",
+      "label": "HTTPS",
+      "color": "#3b82f6",
+      "style": "solid",
+      "width": 3
+    },
+    {
+      "from": "cdn-cloudflare",
+      "to": "web-react-2",
+      "label": "HTTPS",
+      "color": "#3b82f6",
+      "style": "solid",
+      "width": 3
+    },
+    {
+      "from": "group-frontend",
+      "to": "group-api",
+      "label": "API Calls",
+      "color": "#8b5cf6",
+      "style": "solid",
+      "width": 4
+    },
+    {
+      "from": "api-gateway-aws",
+      "to": "node-service-1",
+      "label": "Route",
+      "color": "#68A063",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "api-gateway-aws",
+      "to": "python-service",
+      "label": "Route",
+      "color": "#3776AB",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "group-api",
+      "to": "group-data",
+      "label": "Data Access",
+      "color": "#10b981",
+      "style": "solid",
+      "width": 4
+    },
+    {
+      "from": "node-service-1",
+      "to": "postgres-rds",
+      "label": "SQL Query",
+      "color": "#336791",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "python-service",
+      "to": "mongo-atlas",
+      "label": "NoSQL Query",
+      "color": "#47A248",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "node-service-1",
+      "to": "redis-cache",
+      "label": "Cache",
+      "color": "#DC382D",
+      "style": "dashed",
+      "width": 2
+    },
+    {
+      "from": "python-service",
+      "to": "redis-cache",
+      "label": "Cache",
+      "color": "#DC382D",
+      "style": "dashed",
+      "width": 2
+    },
+    {
+      "from": "node-service-1",
+      "to": "s3-storage",
+      "label": "Store Files",
+      "color": "#569A31",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "python-service",
+      "to": "gcs-storage",
+      "label": "Store Files",
+      "color": "#4285F4",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "node-service-1",
+      "to": "elasticsearch",
+      "label": "Index",
+      "color": "#FEC514",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "python-service",
+      "to": "elasticsearch",
+      "label": "Search",
+      "color": "#FEC514",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "group-api",
+      "to": "group-monitoring",
+      "label": "Metrics",
+      "color": "#f59e0b",
+      "style": "dashed",
+      "width": 3
+    },
+    {
+      "from": "prometheus",
+      "to": "grafana",
+      "label": "Data Source",
+      "color": "#F46800",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "group-container",
+      "to": "group-api",
+      "label": "Deploy Services",
+      "color": "#06b6d4",
+      "style": "dotted",
+      "width": 3
+    },
+    {
+      "from": "k8s-cluster",
+      "to": "docker-registry",
+      "label": "Pull Images",
+      "color": "#2496ED",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "helm",
+      "to": "k8s-cluster",
+      "label": "Deploy",
+      "color": "#326CE5",
+      "style": "solid",
+      "width": 2
+    },
+    {
+      "from": "group-container",
+      "to": "group-monitoring",
+      "label": "Metrics",
+      "color": "#f59e0b",
+      "style": "dashed",
+      "width": 2
+    }
+  ]
+}

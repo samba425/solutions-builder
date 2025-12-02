@@ -1,0 +1,693 @@
+<div class="cytoscape-canvas-container" [class.light-theme]="!isDarkTheme" [class.dark-theme]="isDarkTheme">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Services</h2>
+        <button 
+          (click)="refreshComponents()" 
+          class="refresh-button"
+          [disabled]="isLoadingComponents"
+          title="Refresh components from backend">
+          🔄
+        </button>
+      </div>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        placeholder="Search services..." 
+        class="search-input"
+      />
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoadingComponents" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading components...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="loadingError && !isLoadingComponents" class="error-state">
+      <p>{{ loadingError }}</p>
+      <button (click)="refreshComponents()" class="retry-button">
+        Retry
+      </button>
+    </div>
+
+    <div class="categories" *ngIf="!isLoadingComponents && !loadingError">
+      <div *ngFor="let category of filteredCategories" class="category">
+        <div class="category-header" (click)="toggleCategory(category)">
+          <span class="category-icon">{{ category.collapsed ? '▶' : '▼' }}</span>
+          <span class="category-name">{{ category.name }}</span>
+        </div>
+
+        <!-- Special grid layout for Basic Shapes -->
+        <div *ngIf="!category.collapsed && category.name === 'Basic Shapes'" class="category-items shapes-grid">
+          <div 
+            *ngFor="let item of category.items" 
+            class="shape-item"
+            draggable="true"
+            (dragstart)="onDragStart($event, item)"
+            [attr.data-shape]="item.shape || null"
+            [title]="item.name"
+          >
+            <span class="shape-icon">
+              {{ item.icon }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Regular layout for other categories -->
+        <div *ngIf="!category.collapsed && category.name !== 'Basic Shapes'" class="category-items">
+          <div 
+            *ngFor="let item of category.items" 
+            class="service-item"
+            draggable="true"
+            (dragstart)="onDragStart($event, item)"
+            [style.border-left-color]="item.color"
+            [attr.data-shape]="item.shape || null"
+          >
+            <span class="service-icon">
+              <ng-container *ngIf="item.shape; else regularIcon">
+                {{ item.icon }}
+              </ng-container>
+              <ng-template #regularIcon>
+                <i [class]="item.icon || item.faIcon || 'fas fa-cube'" [style.color]="item.color"></i>
+              </ng-template>
+            </span>
+            
+            <div class="service-content">
+              <div class="service-header">
+                <span class="service-name">{{ item.name }}</span>
+              </div>
+              <div class="service-description" *ngIf="item.description">
+                {{ item.description }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Canvas Area -->
+  <div class="canvas-area">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button (click)="undo()" [disabled]="!canUndo" title="Undo (Ctrl+Z)">
+          ↶ Undo
+        </button>
+        <button (click)="redo()" [disabled]="!canRedo" title="Redo (Ctrl+Y)">
+          ↷ Redo
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <button (click)="autoLayout()" title="Breadthfirst layout">
+          🎯 Auto Layout
+        </button>
+        <button (click)="autoArrangeAfterImport()" title="Smart arrange with spacing and fit to screen">
+          ✨ Smart Arrange
+        </button>
+        <!-- <button (click)="applyCircleLayout()" title="Circular layout">
+          ⭕ Circle
+        </button>
+        <button (click)="applyGridLayout()" title="Grid layout">
+          📐 Grid
+        </button>
+        <button (click)="applyConcentricLayout()" title="Concentric layout">
+          🎪 Concentric
+        </button>
+        <button (click)="applyCoseLayout()" title="Force-directed layout">
+          🌀 Force
+        </button> -->
+      </div>
+
+      <div class="toolbar-group">
+        <!-- <button (click)="selectAll()" title="Select all nodes">
+          ✓ Select All
+        </button>
+        <button (click)="deselectAll()" title="Deselect all">
+          ✗ Deselect
+        </button> -->
+        <button (click)="groupSelectedNodes()" title="Group selected nodes (Ctrl+G)">
+          📦 Group
+        </button>
+        <button (click)="ungroupSelectedNodes()" title="Ungroup selected group (Ctrl+Shift+G)">
+          📦 Ungroup
+        </button>
+        <button (click)="deleteSelected()" title="Delete selected (Del)" class="danger-button">
+          🗑️ Delete
+        </button>
+      </div>
+
+      <!-- <div class="toolbar-group">
+        <button (click)="copySelected()" title="Copy selected (Ctrl+C)">
+          📋 Copy
+        </button>
+        <button (click)="paste()" title="Paste (Ctrl+V)">
+          📌 Paste
+        </button>
+        <button (click)="duplicateSelected()" title="Duplicate selected (Ctrl+D)">
+          👥 Duplicate
+        </button>
+      </div> -->
+
+      <!-- <div class="toolbar-group">
+        <button (click)="searchNodes()" title="Search nodes (Ctrl+F)">
+          🔍 Search
+        </button>
+        <button (click)="selectByType()" title="Select by type">
+          🎯 Select Type
+        </button>
+        <button (click)="centerSelected()" title="Center selected">
+          🎯 Center
+        </button>
+      </div> -->
+
+      <!-- <div class="toolbar-group">
+        <button (click)="alignHorizontal()" title="Align horizontally">
+          ⇿ Align H
+        </button>
+        <button (click)="alignVertical()" title="Align vertically">
+          ⇅ Align V
+        </button>
+        <button (click)="distributeHorizontal()" title="Distribute horizontally">
+          ⇥ Dist H
+        </button>
+        <button (click)="distributeVertical()" title="Distribute vertically">
+          ⤓ Dist V
+        </button>
+      </div> -->
+
+      <div class="toolbar-group">
+        <button (click)="zoomIn()" title="Zoom In">🔍+</button>
+        <button (click)="zoomOut()" title="Zoom Out">🔍-</button>
+        <button (click)="fitToScreen()" title="Fit to screen">⬚ Fit</button>
+        <!-- <button (click)="resetZoom()" title="Reset zoom">↺</button> -->
+      </div>
+
+      <div class="toolbar-group">
+        <!-- <button (click)="editEdgeLabel()" title="Edit connection label">
+          ✏️ Label
+        </button>
+        <button (click)="changeNodeColor()" title="Change node color">
+          🎨 Color
+        </button> -->
+        <!-- <button (click)="changeNodeShape()" title="Change node shape">
+          ◆ Shape
+        </button> -->
+        <button (click)="changeBorderStyle()" title="Change container border style (solid, dashed, dotted)">
+          ╍ Border
+        </button>
+        <!-- <button (click)="resizeNodeBigger()" title="Make selected nodes bigger (20%)">
+          📏+ Bigger
+        </button>
+        <button (click)="resizeNodeSmaller()" title="Make selected nodes smaller (20%)">
+          📏- Smaller
+        </button> -->
+      </div>
+
+      <div class="toolbar-group">
+        <button (click)="toggleGrid()" [class.active]="showGrid" title="Toggle grid lines">
+          ⊞ Grid
+        </button>
+        <!-- <button (click)="toggleGridSnap()" [class.active]="snapToGrid" title="Toggle grid snap (Ctrl+G)">
+          📍 Snap
+        </button>
+        <button (click)="toggleLabels()" [class.active]="showLabels" title="Toggle labels (Ctrl+L)">
+          🏷️ Labels
+        </button> -->
+        <button (click)="toggleTheme()" [class.active]="!isDarkTheme" title="Toggle theme">
+          {{ isDarkTheme ? '☀️' : '🌙' }} Theme
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <button (click)="saveCanvas()" title="Save to browser (Ctrl+S)">💾 Save</button>
+        <button (click)="exportJSON()" title="Export as JSON">📄 Export</button>
+        <button (click)="importDiagram()" title="Import JSON">📤 Import</button>
+        <button (click)="exportAsPNG()" title="Export as PNG">🖼️ PNG</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button (click)="clearCanvas()" class="danger-button" title="Clear all">
+          🗑️ Clear All
+        </button>
+      </div>
+
+      <div class="toolbar-info" *ngIf="lastSaved">
+        <span>Last saved: {{ lastSaved }}</span>
+      </div>
+    </div>
+
+    <!-- Cytoscape Container -->
+    <div 
+      #cytoscapeContainer 
+      class="cytoscape-container"
+      [class.show-grid]="showGrid"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (contextmenu)="$event.preventDefault()"
+    >
+      <!-- Resize & Connection Help Tooltip -->
+      <div class="node-interaction-hint">
+        <div class="hint-item">
+          <span class="hint-icon">⇲</span>
+          <span class="hint-text">Drag corners to resize</span>
+        </div>
+        <div class="hint-item">
+          <span class="hint-icon">⊕</span>
+          <span class="hint-text">Drag from edges to connect</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div 
+      *ngIf="contextMenu.visible" 
+      class="context-menu"
+      [style.left.px]="contextMenu.x"
+      [style.top.px]="contextMenu.y"
+    >
+      <!-- Node context menu -->
+      <ng-container *ngIf="contextMenu.type === 'node'">
+        <button (click)="duplicateNode()">📋 Duplicate Node</button>
+        <button (click)="deleteNode()" class="danger">🗑️ Delete Node</button>
+      </ng-container>
+      
+      <!-- Canvas context menu (when clicking empty space) -->
+      <ng-container *ngIf="contextMenu.type === 'canvas'">
+        <button (click)="groupSelectedNodes()">📦 Group Selected Nodes</button>
+      </ng-container>
+      
+      <!-- Edge context menu -->
+      <ng-container *ngIf="contextMenu.type === 'edge'">
+        <button (click)="editEdge()">✏️ Edit Connection</button>
+        <button (click)="insertNodeBetween()">➕ Insert Node Here</button>
+        <button (click)="deleteEdge()" class="danger">🗑️ Delete Connection</button>
+      </ng-container>
+    </div>
+
+    <!-- Instructions -->
+    <!-- <div class="instructions">
+      <p><strong>Quick Tips:</strong></p>
+      <ul>
+        <li>📦 <strong>Add Card:</strong> Drag any service from sidebar to canvas</li>
+        <li>✋ <strong>Move Card:</strong> Click center of card and drag to move</li>
+        <li>🔗 <strong>Connect Cards:</strong> Click NEAR THE EDGE/BORDER of first card, drag to second card, release</li>
+        <li>📏 <strong>Resize Card:</strong> Click to select card, then drag from edge/corner to resize</li>
+        <li>💡 <strong>Click Zones:</strong> Center = Move | Edge (unselected) = Connect | Edge (selected) = Resize</li>
+        <li>✏️ <strong>Rename:</strong> Double-click card to change name</li>
+        <li>🎨 <strong>Style:</strong> Select card(s) + click Color/Shape buttons</li>
+        <li>📊 <strong>Info:</strong> Click Info button for graph statistics</li>
+        <li>🛤️ <strong>Path:</strong> Select 2 cards + click Path to find shortest route</li>
+        <li>⇿ <strong>Align:</strong> Select multiple cards + use align tools</li>
+        <li>🎯 <strong>Layout:</strong> Use BFS, Circle, Grid, or Force layouts</li>
+        <li>� <strong>Save:</strong> Auto-saves to browser, or export as JSON/PNG/JPG</li>
+        <li>🖱️ <strong>Zoom:</strong> Mouse wheel to zoom in/out</li>
+      </ul>
+      <p><strong>Keyboard Shortcuts:</strong></p>
+      <ul>
+        <li>⌨️ <strong>Ctrl+Z:</strong> Undo</li>
+        <li>⌨️ <strong>Ctrl+Y:</strong> Redo</li>
+        <li>⌨️ <strong>Delete:</strong> Delete selected</li>
+        <li>⌨️ <strong>Ctrl+A:</strong> Select all</li>
+        <li>⌨️ <strong>Escape:</strong> Deselect all</li>
+        <li>⌨️ <strong>Ctrl+S:</strong> Save JSON</li>
+        <li>⌨️ <strong>Ctrl+E:</strong> Export PNG</li>
+      </ul>
+    </div> -->
+
+    <!-- Node Details Tooltip - Shows on hover (Fixed position top-right) -->
+    <div *ngIf="nodeTooltip.visible" class="node-tooltip">
+      <div class="tooltip-header">
+        <span class="tooltip-title">{{ nodeTooltip.nodeData?.label || nodeTooltip.nodeData?.service || 'Node Details' }}</span>
+      </div>
+      
+      <div class="tooltip-content">
+        <div *ngFor="let prop of nodeTooltip.properties" class="tooltip-row">
+          <span class="tooltip-key">{{ prop.key }}:</span>
+          <span class="tooltip-value">{{ prop.value }}</span>
+        </div>
+        
+        <div *ngIf="nodeTooltip.properties.length === 0" class="tooltip-empty">
+          No additional properties
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal - Moved outside main container for proper z-index -->
+<div *ngIf="editModal.visible" class="modal-overlay" (click)="closeEditModal()">
+  <div class="edit-modal-advanced" (click)="$event.stopPropagation()">
+    <div class="modal-header-advanced">
+      <h3>Component Properties</h3>
+      <button class="close-btn-advanced" (click)="closeEditModal()">✕</button>
+    </div>
+    
+    <div class="modal-body-advanced">
+      <!-- Component Name -->
+      <div class="property-section">
+        <label class="property-label">Component Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="editModal.nodeName" 
+          class="property-input"
+          placeholder="Enter component name"
+        />
+      </div>
+
+      <!-- Provider (if exists) -->
+      <div class="property-section" *ngIf="editModal.nodeProvider !== undefined">
+        <label class="property-label">Provider</label>
+        <input 
+          type="text" 
+          [(ngModel)]="editModal.nodeProvider" 
+          class="property-input"
+          placeholder="e.g., AWS, Azure, GCP"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="property-section">
+        <label class="property-label">Description</label>
+        <textarea 
+          [(ngModel)]="editModal.nodeDescription" 
+          class="property-textarea"
+          rows="2"
+          placeholder="Brief description of the component"
+        ></textarea>
+      </div>
+
+      <!-- Definition (if exists) -->
+      <div class="property-section" *ngIf="editModal.nodeDefinition !== undefined">
+        <label class="property-label">Definition</label>
+        <textarea 
+          [(ngModel)]="editModal.nodeDefinition" 
+          class="property-textarea"
+          rows="3"
+          placeholder="Detailed definition of the component"
+        ></textarea>
+      </div>
+
+      <!-- Dynamic Properties -->
+      <div class="property-section" *ngFor="let key of getPropertyKeys()">
+        <ng-container *ngIf="getPropertyConfig(key) as config">
+          <label class="property-label">{{ config.label }}</label>
+          
+          <!-- Text Input -->
+          <input 
+            *ngIf="config.type === 'text'"
+            type="text" 
+            [(ngModel)]="editModal.nodePropertyValues[key]" 
+            class="property-input"
+            [placeholder]="config.placeholder || ''"
+          />
+          
+          <!-- Number Input -->
+          <input 
+            *ngIf="config.type === 'number'"
+            type="number" 
+            [(ngModel)]="editModal.nodePropertyValues[key]" 
+            class="property-input"
+            [placeholder]="config.placeholder || ''"
+          />
+          
+          <!-- Select Dropdown -->
+          <select 
+            *ngIf="config.type === 'select'"
+            [(ngModel)]="editModal.nodePropertyValues[key]" 
+            class="property-select"
+          >
+            <option *ngFor="let option of config.options" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+          
+          <!-- Textarea -->
+          <textarea 
+            *ngIf="config.type === 'textarea'"
+            [(ngModel)]="editModal.nodePropertyValues[key]" 
+            class="property-textarea"
+            rows="3"
+            [placeholder]="config.placeholder || ''"
+          ></textarea>
+        </ng-container>
+      </div>
+    </div>
+    
+    <div class="modal-footer-advanced">
+      <button class="btn-cancel-advanced" (click)="closeEditModal()">Cancel</button>
+      <button class="btn-save-advanced" (click)="saveNodeEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edge Edit Modal -->
+<div *ngIf="edgeEditModal.visible" class="modal-overlay" (click)="closeEdgeEditModal()">
+  <div class="modal-content-advanced" (click)="$event.stopPropagation()">
+    <div class="modal-header-advanced">
+      <h5>Edit Connection</h5>
+      <button class="close-btn-advanced" (click)="closeEdgeEditModal()">✕</button>
+    </div>
+    
+    <div class="modal-body-advanced">
+      <!-- Connection Label -->
+      <div class="property-section">
+        <label class="property-label">Connection Label</label>
+        <input 
+          type="text" 
+          [(ngModel)]="edgeEditModal.edgeLabel" 
+          class="property-input"
+          placeholder="Enter label (optional)"
+        />
+      </div>
+
+      <!-- Connection Color -->
+      <div class="property-section">
+        <label class="property-label">Color</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input 
+            type="color" 
+            [(ngModel)]="edgeEditModal.edgeColor" 
+            style="width: 60px; height: 40px; border-radius: 6px; border: 1px solid #475569; cursor: pointer;"
+          />
+          <input 
+            type="text" 
+            [(ngModel)]="edgeEditModal.edgeColor" 
+            class="property-input"
+            style="flex: 1;"
+            placeholder="#06b6d4"
+          />
+        </div>
+      </div>
+
+      <!-- Line Style -->
+      <div class="property-section">
+        <label class="property-label">Line Style</label>
+        <select 
+          [(ngModel)]="edgeEditModal.edgeStyle" 
+          class="property-select"
+        >
+          <option value="solid">━━━ Solid</option>
+          <option value="dashed">╌╌╌ Dashed</option>
+          <option value="dotted">┄┄┄ Dotted</option>
+        </select>
+      </div>
+
+      <!-- Line Width -->
+      <div class="property-section">
+        <label class="property-label">Line Width</label>
+        <input 
+          type="range" 
+          [(ngModel)]="edgeEditModal.edgeWidth" 
+          min="1" 
+          max="10" 
+          step="1"
+          class="property-input"
+          style="cursor: pointer;"
+        />
+        <div style="text-align: center; margin-top: 5px; color: #94a3b8; font-size: 12px;">
+          {{ edgeEditModal.edgeWidth }}px
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer-advanced">
+      <button class="btn-cancel-advanced" (click)="closeEdgeEditModal()">Cancel</button>
+      <button class="btn-save-advanced" (click)="saveEdgeEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shape Selector Modal -->
+<div *ngIf="shapeModal.visible" class="modal-overlay" (click)="closeShapeModal()">
+  <div class="shape-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header-advanced">
+      <h3>Select Node Shape</h3>
+      <button class="close-btn" (click)="closeShapeModal()">×</button>
+    </div>
+    
+    <div class="shape-grid">
+      <div 
+        *ngFor="let shape of availableShapes" 
+        class="shape-item"
+        (click)="selectShape(shape.name)"
+        [title]="shape.label"
+      >
+        <div class="shape-icon">{{ shape.icon }}</div>
+        <div class="shape-label">{{ shape.label }}</div>
+      </div>
+    </div>
+    
+    <div class="modal-footer-advanced">
+      <button class="btn-cancel-advanced" (click)="closeShapeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Border Style Modal -->
+<div *ngIf="borderStyleModal.visible" class="modal-overlay" (click)="closeBorderStyleModal()">
+  <div class="border-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header-advanced">
+      <h3>Select Border Style</h3>
+      <button class="close-btn" (click)="closeBorderStyleModal()">×</button>
+    </div>
+    
+    <div class="border-styles-grid">
+      <div 
+        *ngFor="let style of availableBorderStyles" 
+        class="border-style-item"
+        [class.active]="borderStyleModal.currentStyle === style.name"
+        (click)="selectBorderStyle(style.name)"
+        [title]="style.label"
+      >
+        <div class="border-preview" [style.border-style]="style.example"></div>
+        <div class="border-icon">{{ style.icon }}</div>
+        <div class="border-label">{{ style.label }}</div>
+      </div>
+    </div>
+
+    <div class="border-width-section">
+      <label class="property-label">Border Width</label>
+      <input 
+        type="range" 
+        [(ngModel)]="borderStyleModal.currentWidth" 
+        (input)="updateBorderWidth(borderStyleModal.currentWidth)"
+        min="1" 
+        max="10" 
+        step="1"
+        class="property-input"
+        style="cursor: pointer; width: 100%;"
+      />
+      <div style="text-align: center; margin-top: 8px; color: #94a3b8; font-size: 13px; font-weight: 600;">
+        {{ borderStyleModal.currentWidth }}px
+      </div>
+    </div>
+    
+    <div class="modal-footer-advanced">
+      <button class="btn-cancel-advanced" (click)="closeBorderStyleModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Group Modal -->
+<div *ngIf="groupModal.visible" class="modal-overlay" (click)="closeGroupModal()">
+  <div class="group-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header-advanced">
+      <h3>📦 Create Group</h3>
+      <button class="close-btn" (click)="closeGroupModal()">×</button>
+    </div>
+    
+    <div class="modal-body-advanced">
+      <div class="property-row">
+        <label class="property-label">Group Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="groupModal.groupName" 
+          class="property-input"
+          placeholder="Enter group name..."
+        />
+      </div>
+
+      <div class="property-row">
+        <label class="property-label">Border Color</label>
+        <div class="color-picker-row">
+          <input 
+            type="color" 
+            [(ngModel)]="groupModal.groupColor" 
+            class="color-input"
+          />
+          <input 
+            type="text" 
+            [(ngModel)]="groupModal.groupColor" 
+            class="property-input"
+            placeholder="#818cf8"
+            style="flex: 1; margin-left: 12px;"
+          />
+        </div>
+      </div>
+
+      <div class="property-row">
+        <label class="property-label">Border Style</label>
+        <select [(ngModel)]="groupModal.borderStyle" class="property-input">
+          <option value="solid">━━━ Solid</option>
+          <option value="dashed">╍╍╍ Dashed</option>
+          <option value="dotted">┄┄┄ Dotted</option>
+          <option value="double">═══ Double</option>
+        </select>
+      </div>
+
+      <div class="property-row">
+        <label class="property-label">Border Width ({{ groupModal.borderWidth }}px)</label>
+        <input 
+          type="range" 
+          [(ngModel)]="groupModal.borderWidth" 
+          min="1" 
+          max="10" 
+          step="1"
+          class="property-input"
+          style="cursor: pointer;"
+        />
+      </div>
+
+      <div class="property-row">
+        <label class="property-label">Background Color</label>
+        <select [(ngModel)]="groupModal.backgroundColor" class="property-input">
+          <option value="transparent">Transparent</option>
+          <option [value]="groupModal.groupColor">Same as Border</option>
+          <option value="#1e293b">Dark</option>
+          <option value="#ffffff">Light</option>
+        </select>
+      </div>
+
+      <div class="property-row">
+        <label class="property-label">
+          <input 
+            type="checkbox" 
+            [(ngModel)]="groupModal.showLabel"
+            style="margin-right: 8px; cursor: pointer;"
+          />
+          Show Label
+        </label>
+      </div>
+
+      <div class="info-box" style="margin-top: 16px; padding: 12px; background: #0f172a; border-left: 3px solid #06b6d4; border-radius: 6px;">
+        <p style="margin: 0; color: #94a3b8; font-size: 13px;">
+          💡 <strong>Tip:</strong> Grouping {{ groupModal.selectedNodes.length }} nodes into a compound container. 
+          You can move the group together and ungroup later with <kbd>Ctrl+Shift+G</kbd>.
+        </p>
+      </div>
+    </div>
+    
+    <div class="modal-footer-advanced">
+      <button class="btn-cancel-advanced" (click)="closeGroupModal()">Cancel</button>
+      <button class="btn-save-advanced" (click)="createGroup()">Create Group</button>
+    </div>
+  </div>
+</div>
+
+

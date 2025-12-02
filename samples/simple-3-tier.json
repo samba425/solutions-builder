@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "frontend-001",
+      "name": "Web Frontend",
+      "icon": "fab fa-react",
+      "color": "#61DAFB",
+      "x": 400,
+      "y": 100,
+      "width": 150,
+      "height": 150,
+      "componentProperties": {
+        "description": "React web application",
+        "provider": "React"
+      }
+    },
+    {
+      "id": "api-001",
+      "name": "API Server",
+      "icon": "fab fa-node",
+      "color": "#68A063",
+      "x": 400,
+      "y": 350,
+      "width": 150,
+      "height": 150,
+      "componentProperties": {
+        "description": "Node.js REST API",
+        "provider": "Node.js"
+      }
+    },
+    {
+      "id": "db-001",
+      "name": "PostgreSQL",
+      "icon": "fas fa-database",
+      "color": "#336791",
+      "x": 400,
+      "y": 600,
+      "width": 150,
+      "height": 150,
+      "componentProperties": {
+        "description": "PostgreSQL relational database",
+        "provider": "PostgreSQL"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "frontend-001",
+      "to": "api-001",
+      "label": "HTTP/REST",
+      "color": "#06b6d4",
+      "style": "solid",
+      "width": 3
+    },
+    {
+      "from": "api-001",
+      "to": "db-001",
+      "label": "SQL",
+      "color": "#336791",
+      "style": "solid",
+      "width": 3
+    }
+  ]
+}

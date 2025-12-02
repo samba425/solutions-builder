@@ -10,9 +10,9 @@
 
 /* Add Data Source Button */
 .btn-add-source {
-  background: var(--accent-blue);
-  border: none;
-  color: white;
+  background: transparent;
+  border: 1px solid var(--accent-blue, #4a9eff);
+  color: var(--accent-blue, #4a9eff);
   padding: 10px 20px;
   border-radius: 6px;
   font-weight: 500;
@@ -25,9 +25,11 @@
 }
 
 .btn-add-source:hover {
-  background: #3a8eef;
+  background: rgba(74, 158, 255, 0.1);
+  border-color: #3a8eef;
+  color: #3a8eef;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
 }
 
 .btn-add-source i {
@@ -63,10 +65,11 @@
 }
 
 .btn-continue:disabled {
-  background: linear-gradient(to right, #334155 0%, #334155 100%);
-  opacity: 1;
+  background: linear-gradient(to right, #2563eb 0%, #0891b2 50%, #2563eb 100%);
+  opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .btn-continue i {

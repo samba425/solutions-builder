@@ -36,6 +36,29 @@ app.use(
 );
 
 /**
+ * Middleware to filter out malformed URIs (e.g., CSS gradients being interpreted as URLs)
+ */
+app.use((req, res, next) => {
+  try {
+    // Try to decode the URL to catch malformed URIs early
+    decodeURIComponent(req.url);
+    
+    // Additional check for gradient-like patterns that shouldn't be URLs
+    if (req.url.match(/\/\d+%[,)]/)) {
+      // This looks like a CSS gradient percentage being interpreted as a URL
+      res.status(400).end();
+      return;
+    }
+    
+    next();
+  } catch (err) {
+    // If URL is malformed (e.g., contains unescaped % characters from CSS gradients)
+    // Silently reject without logging to avoid console spam
+    res.status(400).end();
+  }
+});
+
+/**
  * Handle all other requests by rendering the Angular application.
  */
 app.use((req, res, next) => {
@@ -44,7 +67,15 @@ app.use((req, res, next) => {
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next(),
     )
-    .catch(next);
+    .catch((err) => {
+      // Handle URI errors gracefully
+      if (err instanceof URIError) {
+        console.log(`⚠️ URI Error caught: ${req.url}`);
+        res.status(400).end();
+      } else {
+        next(err);
+      }
+    });
 });
 
 /**

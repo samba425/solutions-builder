@@ -25,14 +25,13 @@ export class Architecture {
   goBack() {
     this.prevStep.emit();
   }
+ 
 
-  openCanvas() {
+  openCytoscape() {
     this.router.navigate(['/canvas']);
   }
-
-  openKonvaCanvas() {
-    this.router.navigate(['/konva']);
-  }
+ 
+ 
 
   getFileIcon(type: string): string {
     switch (type) {
@@ -51,10 +50,12 @@ export class Architecture {
 
   generateArchitecture() {
     this.isGenerating = true;
-    // Simulate architecture generation
+    // Simulate architecture generation and navigate to builder
     setTimeout(() => {
       this.isGenerating = false;
       this.architectureGenerated = true;
-    }, 2000);
+      // Navigate to Cytoscape architecture builder
+      this.router.navigate(['/builder']);
+    }, 500);
   }
 }
