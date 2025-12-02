@@ -65,6 +65,11 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
   isBrowser: boolean;
   searchTerm = '';
   
+  // Icon cache for Iconify API with localStorage persistence
+  private iconCache: Map<string, string> = new Map();
+  private readonly ICON_CACHE_KEY = 'iconify-cache';
+  private readonly ICON_CACHE_VERSION = 'v1'; // Increment to invalidate old cache
+  
   // History Management
   private history: any[] = [];
   private historyIndex = -1;
@@ -196,7 +201,57 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   ngOnInit(): void {
+    // Load icon cache from localStorage first
+    this.loadIconCacheFromStorage();
+    
     this.loadComponentsFromAPI();
+  }
+
+  /**
+   * Load icon cache from localStorage
+   */
+  private loadIconCacheFromStorage(): void {
+    if (!this.isBrowser) return;
+    
+    try {
+      const cached = localStorage.getItem(this.ICON_CACHE_KEY);
+      if (cached) {
+        const cacheData = JSON.parse(cached);
+        
+        // Check version to invalidate old cache
+        if (cacheData.version === this.ICON_CACHE_VERSION) {
+          // Restore Map from stored object
+          this.iconCache = new Map(Object.entries(cacheData.icons));
+          console.log(`✅ Loaded ${this.iconCache.size} icons from localStorage cache`);
+        } else {
+          console.log('⚠️ Icon cache version mismatch, clearing old cache');
+          localStorage.removeItem(this.ICON_CACHE_KEY);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load icon cache from localStorage:', error);
+    }
+  }
+
+  /**
+   * Save icon cache to localStorage
+   */
+  private saveIconCacheToStorage(): void {
+    if (!this.isBrowser) return;
+    
+    try {
+      // Convert Map to plain object for storage
+      const cacheData = {
+        version: this.ICON_CACHE_VERSION,
+        icons: Object.fromEntries(this.iconCache),
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem(this.ICON_CACHE_KEY, JSON.stringify(cacheData));
+      console.log(`💾 Saved ${this.iconCache.size} icons to localStorage cache`);
+    } catch (error) {
+      console.warn('Failed to save icon cache to localStorage:', error);
+    }
   }
 
   /**
@@ -257,6 +312,9 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
         this.isLoadingComponents = false;
         this.cdr.detectChanges();
         console.log('✅ Categories organized:', this.categories);
+        
+        // Prefetch all icons after loading components
+        this.prefetchAllIcons();
       },
       error: (error) => {
         console.error('❌ Failed to load components:', error);
@@ -275,11 +333,94 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
       next: (data) => {
         console.log('🔄 Components refreshed:', data);
         this.loadComponentsFromAPI();
+        // Prefetch icons for all components
+        this.prefetchAllIcons();
       },
       error: (error) => {
         console.error('❌ Failed to refresh components:', error);
       }
     });
+  }
+
+  /**
+   * Prefetch all icons from components to cache them
+   */
+  async prefetchAllIcons(): Promise<void> {
+    const allIcons = new Set<string>();
+    
+    // Collect all unique icons from all categories
+    this.categories.forEach((category: ServiceCategory) => {
+      category.items.forEach((item: ServiceItem) => {
+        if (item.icon) {
+          allIcons.add(item.icon);
+        }
+      });
+    });
+    
+    console.log(`🎨 Prefetching ${allIcons.size} icons from Iconify...`);
+    
+    // Fetch all icons in parallel
+    const fetchPromises = Array.from(allIcons).map(icon => 
+      this.fetchIconFromIconify(icon).catch(err => {
+        console.warn(`Failed to fetch icon ${icon}:`, err);
+        return null;
+      })
+    );
+    
+    await Promise.all(fetchPromises);
+    console.log(`✅ Icon prefetch complete. ${this.iconCache.size} icons cached.`);
+    
+    // Save all fetched icons to localStorage in one batch
+    this.saveIconCacheToStorage();
+  }
+
+  /**
+   * Prefetch icons from canvas data (for saved/imported diagrams)
+   */
+  async prefetchIconsFromData(elements: any[]): Promise<void> {
+    const allIcons = new Set<string>();
+    
+    // Collect all unique icons from elements
+    elements.forEach((ele: any) => {
+      if (ele.data) {
+        const icon = ele.data.faIcon || ele.data.icon;
+        if (icon && typeof icon === 'string' && icon.startsWith('fa')) {
+          allIcons.add(icon);
+        }
+      }
+    });
+    
+    if (allIcons.size === 0) {
+      console.log('ℹ️ No icons to prefetch from canvas data');
+      return;
+    }
+    
+    console.log(`🎨 Prefetching ${allIcons.size} icons from canvas data...`);
+    
+    // Fetch all icons in parallel
+    const fetchPromises = Array.from(allIcons).map(icon => 
+      this.fetchIconFromIconify(icon).catch(err => {
+        console.warn(`Failed to fetch icon ${icon}:`, err);
+        return null;
+      })
+    );
+    
+    await Promise.all(fetchPromises);
+    console.log(`✅ Canvas icon prefetch complete. ${this.iconCache.size} total icons cached.`);
+    
+    // Save to localStorage after batch fetch
+    this.saveIconCacheToStorage();
+  }
+
+  /**
+   * Clear icon cache (useful for debugging or forcing refresh)
+   */
+  clearIconCache(): void {
+    this.iconCache.clear();
+    if (this.isBrowser) {
+      localStorage.removeItem(this.ICON_CACHE_KEY);
+      console.log('🗑️ Icon cache cleared');
+    }
   }
 
   ngAfterViewInit(): void {
@@ -846,8 +987,8 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
     // Setup event handlers
     this.setupEventHandlers();
     
-    // Try to load saved data
-    this.loadCanvas();
+    // Try to load saved data (async)
+    this.loadCanvas().catch(err => console.error('Failed to load canvas:', err));
     
     console.log('✅ Cytoscape initialized - Edgehandles active with smart detection');
   }
@@ -1570,63 +1711,126 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  // Fetch SVG from Iconify API and extract path data
+  async fetchIconFromIconify(faIcon: string): Promise<{ path: string, viewBox: string } | null> {
+    // Only run in browser (not SSR)
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    // Check cache first
+    if (this.iconCache.has(faIcon)) {
+      return JSON.parse(this.iconCache.get(faIcon)!);
+    }
+
+    try {
+      // Convert Font Awesome class to Iconify format with icon name mapping
+      // Some FA5 icons have different names in FA6
+      let iconifyIcon = '';
+      let iconName = '';
+      
+      if (faIcon.startsWith('fab fa-')) {
+        iconName = faIcon.replace('fab fa-', '');
+        iconifyIcon = `fa6-brands:${iconName}`;
+      } else if (faIcon.startsWith('fas fa-')) {
+        iconName = faIcon.replace('fas fa-', '');
+        
+        // Map FA5 icon names to FA6 names
+        const iconNameMap: { [key: string]: string } = {
+          'project-diagram': 'diagram-project',
+          'cogs': 'gears',
+          'tachometer-alt': 'gauge',
+          'comment-alt': 'message',
+          'sync': 'arrows-rotate'
+        };
+        
+        iconName = iconNameMap[iconName] || iconName;
+        iconifyIcon = `fa6-solid:${iconName}`;
+      } else if (faIcon.startsWith('far fa-')) {
+        iconName = faIcon.replace('far fa-', '');
+        iconifyIcon = `fa6-regular:${iconName}`;
+      } else {
+        return null;
+      }
+
+      // Fetch from Iconify API
+      const url = `https://api.iconify.design/${iconifyIcon}.svg`;
+      const response = await fetch(url);
+      
+      if (response.ok) {
+        const svgText = await response.text();
+        
+        // Parse SVG to extract viewBox and path (browser only)
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgElement = svgDoc.querySelector('svg');
+        const pathElement = svgDoc.querySelector('path');
+        
+        if (svgElement && pathElement) {
+          const viewBox = svgElement.getAttribute('viewBox') || '0 0 512 512';
+          const path = pathElement.getAttribute('d') || '';
+          
+          const iconData = { path, viewBox };
+          // Cache the result as JSON string
+          this.iconCache.set(faIcon, JSON.stringify(iconData));
+          
+          // Save to localStorage for persistence (don't await, do it async)
+          this.saveIconCacheToStorage();
+          
+          return iconData;
+        } else {
+          console.warn(`Failed to parse SVG from Iconify: ${iconifyIcon}`);
+          return null;
+        }
+      } else {
+        console.warn(`Failed to fetch icon from Iconify: ${iconifyIcon} (original: ${faIcon})`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Error fetching icon from Iconify:`, error);
+      return null;
+    }
+  }
+
   // Helper method to get Font Awesome SVG path data
   getFontAwesomeSVGPath(faIcon: string): { path: string, viewBox: string } {
-    // Font Awesome official SVG path data
-    const iconPaths: { [key: string]: { path: string, viewBox: string } } = {
-      'fab fa-aws': {
-        viewBox: '0 0 640 512',
-        path: 'M180.4 267C179.7 289.6 191 299.7 191.3 306C191.2 307.3 190.7 308.5 190 309.6C189.3 310.7 188.3 311.6 187.2 312.2L174.4 321.2C172.7 322.4 170.8 323 168.8 323.1C168.4 323.1 160.6 324.9 148.3 297.5C140.8 306.9 131.3 314.4 120.4 319.5C109.5 324.6 97.7 327.2 85.7 327C69.4 327.9 25.3 317.8 27.6 270.8C26 232.5 61.7 208.7 98.5 210.8C105.6 210.8 120.1 211.2 145.5 217.1L145.5 201.5C148.2 175 130.8 154.5 100.7 157.6C98.3 157.6 81.3 157.1 54.9 167.7C47.5 171.1 46.6 170.5 44.1 170.5C36.7 170.5 39.7 149 41.2 146.3C46.4 139.9 77.1 127.9 107.1 128.1C127.2 126.3 147.2 132.5 162.8 145.4C169.1 152.5 174 160.8 177 169.8C180 178.8 181.2 188.3 180.5 197.8L180.5 267.1zM94 299.4C126.4 298.9 140.2 279.4 143.3 268.9C145.8 258.8 145.4 252.5 145.4 241.5C135.7 239.2 121.8 236.6 105.8 236.6C90.6 235.5 63 242.2 64.1 268.9C62.9 285.7 75.2 300.3 94.1 299.4zM264.9 322.5C257 323.2 253.4 317.6 252.2 312.1L202.4 147.4C201.4 144.6 200.8 141.8 200.5 138.8C200.3 137.6 200.6 136.4 201.3 135.4C202 134.4 203.1 133.8 204.3 133.6C204.5 133.6 202.2 133.6 226.5 133.6C235.3 132.7 238.1 139.6 239.1 144L274.9 284.8L308.1 144C308.6 140.8 311 132.9 320.9 133.8L338.1 133.8C340.3 133.6 349.2 133.3 350.8 144.2L384.1 286.7L421 144.1C421.5 141.9 423.7 132.7 433.7 133.7L453.4 133.7C454.3 133.6 459.6 132.9 458.7 142.3C458.3 144.1 462.1 131.6 405.9 312.2C404.8 317.7 401.1 323.3 393.2 322.6L374.5 322.6C363.6 323.8 362 312.9 361.8 311.9L328.6 174.8L295.8 311.8C295.6 312.9 294.1 323.7 283.1 322.5L264.8 322.5L264.8 322.5zM538.4 328.1C532.5 328.1 504.5 327.8 481 315.8C478.7 314.8 476.7 313.2 475.3 311C473.9 308.8 473.2 306.4 473.2 303.9L473.2 293.2C473.2 284.7 479.4 286.3 482 287.3C492 291.4 498.5 294.4 510.8 296.9C547.5 304.4 563.6 294.6 567.5 292.4C580.7 284.6 581.7 266.7 572.8 257.5C562.3 248.7 557.3 248.4 519.7 236.5C515.1 235.2 476 222.9 475.9 184.1C475.3 155.9 500.9 127.9 545.4 128.1C558.1 128.1 591.8 132.2 601 143.7C602.4 145.8 603 148.3 602.9 150.7L602.9 160.8C602.9 165.2 601.3 167.5 598 167.5C590.3 166.6 576.6 156.3 548.8 156.7C541.9 156.3 508.9 157.6 510.4 181.7C510 200.7 537 207.8 540.1 208.6C576.6 219.6 588.7 221.4 603.2 238.2C620.3 260.4 611.1 286.5 607.5 293.6C588.4 331.1 539.1 328 538.2 328zM578.6 433C508.6 484.7 406.9 512.2 320.1 512.2C203 513 89.8 469.9 2.8 391.5C-3.7 385.6 2 377.5 10 382C106.5 437.2 215.7 466.2 326.9 466.1C409.9 465.7 492 448.8 568.5 416.6C580.3 411.6 590.3 424.4 578.6 433zM607.8 399.7C598.8 388.2 548.5 394.3 526 397C519.2 397.8 518.1 391.9 524.2 387.5C564.3 359.3 630.1 367.4 637.6 376.9C645.1 386.4 635.5 452.3 598 483.8C592.2 488.7 586.7 486.1 589.3 479.7C597.7 458.4 616.7 411.2 607.7 399.7z'
-      },
-      'fab fa-microsoft': {
-        viewBox: '0 0 448 512',
-        path: 'M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z'
-      },
-      'fab fa-google': {
-        viewBox: '0 0 488 512',
-        path: 'M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z'
-      },
-      'fab fa-meta': {
-        viewBox: '0 0 640 512',
-        path: 'M640 317.9C640 409.2 600.6 466.4 529.7 466.4C467.1 466.4 433.9 431.8 372.8 329.8L341.4 277.2C312.1 226.8 288.9 195.8 249.7 195.8C216.3 195.8 197.5 223.8 197.5 275.4C197.5 333.1 220.7 380.4 220.7 430.8C220.7 474.4 196.3 496 148.9 496C93.1 496 0 456 0 286.2C0 144.9 91.1 32 209.1 32C281.7 32 318.1 71.1 378.1 168.1L408.1 220.1C437.1 270.1 460.1 301.1 499.1 301.1C532.1 301.1 551.1 273.1 551.1 221.1C551.1 163.1 529.1 116.1 529.1 66.1C529.1 22.1 552.1 0 600.1 0C655.1 0 640 40 640 210.1V317.9z'
-      },
-      'fas fa-brain': {
-        viewBox: '0 0 512 512',
-        path: 'M184 0c30.9 0 56 25.1 56 56V456c0 30.9-25.1 56-56 56c-28.9 0-52.7-21.9-55.7-50.1c-5.2 1.4-10.7 2.1-16.3 2.1c-35.3 0-64-28.7-64-64c0-7.4 1.3-14.6 3.6-21.2C21.4 367.4 0 338.2 0 304c0-31.9 18.7-59.5 45.8-72.3C37.1 220.8 32 207 32 192c0-30.7 21.6-56.3 50.4-62.6C80.8 123.9 80 118 80 112c0-29.9 20.6-55.1 48.3-62.1C131.3 21.9 155.1 0 184 0zM328 0c28.9 0 52.6 21.9 55.7 49.9c27.8 7 48.3 32.1 48.3 62.1c0 6-.8 11.9-2.4 17.4c28.8 6.2 50.4 31.9 50.4 62.6c0 15-5.1 28.8-13.8 39.7C493.3 244.5 512 272.1 512 304c0 34.2-21.4 63.4-51.6 74.8c2.3 6.6 3.6 13.8 3.6 21.2c0 35.3-28.7 64-64 64c-5.6 0-11.1-.7-16.3-2.1c-3 28.2-26.8 50.1-55.7 50.1c-30.9 0-56-25.1-56-56V56c0-30.9 25.1-56 56-56z'
-      },
-      'fas fa-comments': {
-        viewBox: '0 0 640 512',
-        path: 'M208 352c114.9 0 208-78.8 208-176S322.9 0 208 0S0 78.8 0 176c0 38.6 14.7 74.3 39.6 103.4c-3.5 9.4-8.7 17.7-14.2 24.7c-4.8 6.2-9.7 11-13.3 14.3c-1.8 1.6-3.3 2.9-4.3 3.7c-.5 .4-.9 .7-1.1 .8l-.2 .2 0 0 0 0C1 327.2-1.4 334.4 .8 340.9S9.1 352 16 352c21.8 0 43.8-5.6 62.1-12.5c9.2-3.5 17.8-7.4 25.3-11.4C134.1 343.3 169.8 352 208 352zM448 176c0 112.3-99.1 196.9-216.5 207C255.8 457.4 336.4 512 432 512c38.2 0 73.9-8.7 104.7-23.9c7.5 4 16 7.9 25.2 11.4c18.3 6.9 40.3 12.5 62.1 12.5c6.9 0 13.1-4.5 15.2-11.1c2.1-6.6-.2-13.8-5.8-17.9l0 0 0 0-.2-.2c-.2-.2-.6-.4-1.1-.8c-1-.8-2.5-2-4.3-3.7c-3.6-3.3-8.5-8.1-13.3-14.3c-5.5-7-10.7-15.4-14.2-24.7c24.9-29 39.6-64.7 39.6-103.4c0-92.8-84.9-168.9-192.6-175.5c.4 5.1 .6 10.3 .6 15.5z'
-      },
-      'fas fa-database': {
-        viewBox: '0 0 448 512',
-        path: 'M448 80v48c0 44.2-100.3 80-224 80S0 172.2 0 128V80C0 35.8 100.3 0 224 0S448 35.8 448 80zM393.2 214.7c20.8-7.4 39.9-16.9 54.8-28.6V288c0 44.2-100.3 80-224 80S0 332.2 0 288V186.1c14.9 11.8 34 21.2 54.8 28.6C99.7 230.7 159.5 240 224 240s124.3-9.3 169.2-25.3zM0 346.1c14.9 11.8 34 21.2 54.8 28.6C99.7 390.7 159.5 400 224 400s124.3-9.3 169.2-25.3c20.8-7.4 39.9-16.9 54.8-28.6V432c0 44.2-100.3 80-224 80S0 476.2 0 432V346.1z'
-      },
-      'fas fa-microchip': {
-        viewBox: '0 0 512 512',
-        path: 'M176 24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64c-35.3 0-64 28.7-64 64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64v64H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H64c0 35.3 28.7 64 64 64v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h64v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448h64v40c0 13.3 10.7 24 24 24s24-10.7 24-24V448c35.3 0 64-28.7 64-64h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V272h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448V160h40c13.3 0 24-10.7 24-24s-10.7-24-24-24H448c0-35.3-28.7-64-64-64V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H272V24c0-13.3-10.7-24-24-24s-24 10.7-24 24V64H160V24zM160 128H352c17.7 0 32 14.3 32 32V352c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32z'
-      },
-      'fas fa-server': {
-        viewBox: '0 0 512 512',
-        path: 'M64 32C28.7 32 0 60.7 0 96v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V352c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z'
-      },
-      'fas fa-stream': {
-        viewBox: '0 0 512 512',
-        path: 'M16 96c0-17.7 14.3-32 32-32l416 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 128c-17.7 0-32-14.3-32-32zM256 224c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l208 0zM16 416c0-17.7 14.3-32 32-32l416 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 448c-17.7 0-32-14.3-32-32z'
-      },
-      'fas fa-fire': {
-        viewBox: '0 0 448 512',
-        path: 'M159.3 5.4c7.8-7.3 19.9-7.2 27.7 .1c27.6 25.9 53.5 53.8 77.7 84c11-14.4 23.5-30.1 37-42.9c7.9-7.4 20.1-7.4 28 .1c34.6 33 63.9 76.6 84.5 118c20.3 40.8 33.8 82.5 33.8 111.9C448 404.2 348.2 512 224 512C98.4 512 0 404.1 0 276.5c0-38.4 17.8-85.3 45.4-131.7C73.3 97.7 112.7 48.6 159.3 5.4zM225.7 416c25.3 0 47.7-7 68.8-21c42.1-29.4 53.4-88.2 28.1-134.4c-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5c-16.5-21-46-58.5-62.8-79.8c-6.3-8-18.3-8.1-24.7-.1c-33.8 42.5-50.8 69.3-50.8 99.4C112 375.4 162.6 416 225.7 416z'
+    // First, try to get from cache (already fetched from Iconify)
+    if (this.iconCache.has(faIcon)) {
+      try {
+        return JSON.parse(this.iconCache.get(faIcon)!);
+      } catch (e) {
+        console.warn('Failed to parse cached icon:', e);
       }
-    };
+    }
 
-    return iconPaths[faIcon] || iconPaths['fas fa-server']; // Default fallback
+    // If not in cache and we're in browser, try to fetch it synchronously
+    // This is a fallback - normally icons should be prefetched
+    console.warn(`⚠️ Icon ${faIcon} not in cache, using basic fallback. Consider prefetching.`);
+    
+    // Return a very basic fallback icon (server/box shape)
+    return {
+      viewBox: '0 0 512 512',
+      path: 'M64 32C28.7 32 0 60.7 0 96v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V352c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z' // server icon as fallback
+    };
   }
 
   // Helper method to generate combined SVG with proper icon rendering
   generateCardBackgroundSVG(faIcon: string, color: string): string {
-    // Get the Font Awesome SVG path
-    const iconData = this.getFontAwesomeSVGPath(faIcon);
+    // Try to get from cache first (if already fetched)
+    let iconData: { path: string, viewBox: string } | null = null;
+    
+    if (this.iconCache.has(faIcon)) {
+      try {
+        iconData = JSON.parse(this.iconCache.get(faIcon)!);
+      } catch (e) {
+        console.warn('Failed to parse cached icon data:', e);
+      }
+    }
+    
+    // Fallback to hardcoded icons if not in cache
+    if (!iconData) {
+      iconData = this.getFontAwesomeSVGPath(faIcon);
+    }
     
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">
       <!-- White background only -->
@@ -1635,76 +1839,6 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
       <svg x="54" y="54" width="32" height="32" viewBox="${iconData.viewBox}">
         <path d="${iconData.path}" fill="${color}"/>
       </svg>
-    </svg>`;
-    
-    const encoded = encodeURIComponent(svgContent);
-    return `data:image/svg+xml,${encoded}`;
-  }
-
-  // Old method - can be removed
-  getIconImageUrl(faIcon: string, color: string): string {
-    // Get the actual SVG path for each Font Awesome icon
-    let iconPath = '';
-    
-    switch (faIcon) {
-      case 'fab fa-aws':
-        // Official AWS logo SVG path from Font Awesome
-        iconPath = `<path d="M3.5 11.5c-.3 0-.5.2-.5.5v1c0 .3.2.5.5.5s.5-.2.5-.5v-1c0-.3-.2-.5-.5-.5zm3 0c-.3 0-.5.2-.5.5v1c0 .3.2.5.5.5s.5-.2.5-.5v-1c0-.3-.2-.5-.5-.5zm-6 4c0 .8.7 1.5 1.5 1.5h13c.8 0 1.5-.7 1.5-1.5v-7c0-.8-.7-1.5-1.5-1.5H2c-.8 0-1.5.7-1.5 1.5v7zM9.5 12c0-.6-.4-1-1-1s-1 .4-1 1 .4 1 1 1 1-.4 1-1zm4 0c0-.6-.4-1-1-1s-1 .4-1 1 .4 1 1 1 1-.4 1-1z" fill="white" transform="translate(6,8) scale(1.2)"/>`;
-        break;
-      case 'fab fa-microsoft':
-        // Official Microsoft logo SVG from Font Awesome
-        iconPath = `<path d="M11.4 0H0v11.4h11.4V0zm1.2 0v11.4H24V0H12.6zM11.4 12.6H0V24h11.4V12.6zm1.2 0V24H24V12.6H12.6z" fill="white" transform="translate(4,4) scale(0.9)"/>`;
-        break;
-      case 'fab fa-google':
-        // Official Google logo SVG from Font Awesome  
-        iconPath = `<path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" fill="white" transform="translate(4,4) scale(0.8)"/>`;
-        break;
-      case 'fab fa-meta':
-        // Meta logo
-        iconPath = `<path d="M12.7 1.4c-1.9 0-3.4.8-4.5 2.3-1.1 1.5-1.8 3.5-2.1 5.8-.6 4.6.8 9.1 4 11.5 1.6 1.2 3.5 1.9 5.5 1.9s3.9-.7 5.5-1.9c3.2-2.4 4.6-6.9 4-11.5-.3-2.3-1-4.3-2.1-5.8-1.1-1.5-2.6-2.3-4.5-2.3-1.5 0-2.8.6-3.9 1.8-1.1-1.2-2.4-1.8-3.9-1.8z" fill="white" transform="translate(2,2) scale(0.9)"/>`;
-        break;
-      case 'fas fa-brain':
-        // Official Brain icon SVG from Font Awesome
-        iconPath = `<path d="M544 0c-12.4 0-24.3 3.2-34.5 8.8C490.8 3.2 470.7 0 448 0 377.3 0 320 57.3 320 128c0 13.5 2.1 26.6 6 38.8-21.5-8.8-45-13.8-69-13.8C150.7 153 64 239.7 64 346s86.7 193 193 193c48.8 0 93.2-18.4 127.3-48.6C418.6 521.6 463.2 544 512 544c88.4 0 160-71.6 160-160 0-11.2-1.2-22.2-3.4-32.8C699.5 332.2 720 299.8 720 262c0-53-43-96-96-96-11.2 0-22 1.9-32 5.5V128c0-70.7-57.3-128-128-128z" fill="white" transform="translate(2,4) scale(0.04)"/>`;
-        break;
-      case 'fas fa-comments':
-        // Official Comments icon SVG from Font Awesome
-        iconPath = `<path d="M416 192c0-88.4-93.1-160-208-160S0 103.6 0 192c0 34.3 14.1 65.9 38 92-13.4 30.2-35.5 54.2-35.8 54.5-2.2 2.3-2.8 5.7-1.5 8.7 1.3 3 4.1 4.8 7.3 4.8 66.3 0 116-31.8 140.6-51.4 32.7 12.3 69 19.4 107.4 19.4 114.9 0 208-71.6 208-160zm96 224c0-70.7-57.3-128-128-128-13.3 0-26.1 2.1-38.2 6.1C372.1 263.2 416 224.4 416 192c0-8.8-1.1-17.4-3.2-25.8 100.8-7.5 187.2 54.4 187.2 113.8 0 30.2-14.1 57.4-38 77.8 13.4 26.4 35.5 47.4 35.8 47.7 2.2 2 2.8 5 1.5 7.6-1.3 2.6-4.1 4.2-7.3 4.2-66.3 0-116-27.8-140.6-45 17.3-6.9 33.5-15.9 48-26.7 37.9 15.6 82.2 24.4 128.6 24.4z" fill="white" transform="translate(2,6) scale(0.05)"/>`;
-        break;
-      case 'fas fa-database':
-        // Official Database icon SVG from Font Awesome
-        iconPath = `<path d="M448 73.143v45.714C448 159.143 347.667 192 224 192S0 159.143 0 118.857V73.143C0 32.857 100.333 0 224 0s224 32.857 224 73.143zM448 176v102.857C448 319.143 347.667 352 224 352S0 319.143 0 278.857V176c48.125 33.143 136.208 48.572 224 48.572S399.875 209.143 448 176zm0 160v102.857C448 479.143 347.667 512 224 512S0 479.143 0 438.857V336c48.125 33.143 136.208 48.572 224 48.572S399.875 369.143 448 336z" fill="white" transform="translate(4,5) scale(0.055)"/>`;
-        break;
-      case 'fas fa-microchip':
-        // Official Microchip icon SVG from Font Awesome
-        iconPath = `<path d="M416 48v416c0 26.51-21.49 48-48 48H144c-26.51 0-48-21.49-48-48V48c0-26.51 21.49-48 48-48h224c26.51 0 48 21.49 48 48zm96 58v12c0 6.627-5.373 12-12 12h-84v-24h84c6.627 0 12 5.373 12 12zm0 96v12c0 6.627-5.373 12-12 12h-84v-24h84c6.627 0 12 5.373 12 12zm0 96v12c0 6.627-5.373 12-12 12h-84v-24h84c6.627 0 12 5.373 12 12zm0 96v12c0 6.627-5.373 12-12 12h-84v-24h84c6.627 0 12 5.373 12 12zM0 106v12c0 6.627 5.373 12 12 12h84v-24H12c-6.627 0-12 5.373-12 12zm0 96v12c0 6.627 5.373 12 12 12h84v-24H12c-6.627 0-12 5.373-12 12zm0 96v12c0 6.627 5.373 12 12 12h84v-24H12c-6.627 0-12 5.373-12 12zm0 96v12c0 6.627 5.373 12 12 12h84v-24H12c-6.627 0-12 5.373-12 12zM192 144c0-8.84 7.16-16 16-16h96c8.84 0 16 7.16 16 16v224c0 8.84-7.16 16-16 16h-96c-8.84 0-16-7.16-16-16V144z" fill="white" transform="translate(5,5) scale(0.045)"/>`;
-        break;
-      case 'fas fa-server':
-        // Official Server icon SVG from Font Awesome
-        iconPath = `<path d="M480 160H32c-17.673 0-32-14.327-32-32V64c0-17.673 14.327-32 32-32h448c17.673 0 32 14.327 32 32v64c0 17.673-14.327 32-32 32zm-48-88c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24zm-64 0c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24zm112 248H32c-17.673 0-32-14.327-32-32v-64c0-17.673 14.327-32 32-32h448c17.673 0 32 14.327 32 32v64c0 17.673-14.327 32-32 32zm-48-88c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24zm-64 0c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24zm112 248H32c-17.673 0-32-14.327-32-32v-64c0-17.673 14.327-32 32-32h448c17.673 0 32 14.327 32 32v64c0 17.673-14.327 32-32 32zm-48-88c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24zm-64 0c-13.255 0-24 10.745-24 24s10.745 24 24 24 24-10.745 24-24-10.745-24-24-24z" fill="white" transform="translate(4,4) scale(0.045)"/>`;
-        break;
-      case 'fas fa-stream':
-        // Official Stream icon SVG from Font Awesome
-        iconPath = `<path d="M16 128h416c8.84 0 16-7.16 16-16V80c0-8.84-7.16-16-16-16H16C7.16 64 0 71.16 0 80v32c0 8.84 7.16 16 16 16zm480 80H80c-8.84 0-16 7.16-16 16v32c0 8.84 7.16 16 16 16h416c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16zm-64 176H16c-8.84 0-16 7.16-16 16v32c0 8.84 7.16 16 16 16h416c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16z" fill="white" transform="translate(5,7) scale(0.05)"/>`;
-        break;
-      case 'fas fa-fire':
-        // Official Fire icon SVG from Font Awesome
-        iconPath = `<path d="M216.3 158.4c.5-1 .5-2.2 0-3.2-8.3-16.8-13.9-34.7-16.5-53.2-.3-2.3-2.7-3.5-4.6-2.3-17.2 11.1-33.5 24.6-48.1 39.8-40.7 42.4-65.1 98.4-65.1 159.5 0 106 86 192 192 192s192-86 192-192c0-170.9-168-193.8-249.7-140.6zM296 448c-79.5 0-144-64.5-144-144 0-28.4 6.5-55.4 18.1-79.4 11.6 13.6 25 26.1 40.1 37.1 3.8 2.8 9.1.3 9.3-4.4 1.1-21.3 5.6-41.9 13.4-61.2 21.3 26.6 46.8 49.7 75.6 68.3 1.7 1.1 4-.5 3.5-2.5-2.5-9.7-3.8-19.8-3.8-30.1 0-63.4 48.1-116.9 110.4-123.5C465.7 118.1 512 181.8 512 256c0 79.5-64.5 144-144 144z" fill="white" transform="translate(4,4) scale(0.045)"/>`;
-        break;
-      default:
-        // Default cube icon
-        iconPath = `<path d="M16 2l-8 4v8l8 4 8-4V6l-8-4zm0 2.5L22 7v6.5l-6 3V10l-6-3 6-2.5z" fill="white" transform="translate(2,2) scale(1.3)"/>`;
-    }
-    
-    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">
-      <!-- Colored header section (35% = 49px) -->
-      <rect x="0" y="0" width="140" height="49" fill="${color}"/>
-      <!-- White body section -->
-      <rect x="0" y="49" width="140" height="91" fill="#ffffff"/>
-      <!-- Icon in header (centered, scaled to fit) -->
-      <g transform="translate(55, 10) scale(1.5)">
-        ${iconPath}
-      </g>
     </svg>`;
     
     const encoded = encodeURIComponent(svgContent);
@@ -2263,12 +2397,27 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
       const file = e.target.files[0];
       const reader = new FileReader();
       
-      reader.onload = (event: any) => {
+      reader.onload = async (event: any) => {
         try {
           const importData = JSON.parse(event.target.result);
           
           // Clear current diagram
           this.cy?.elements().remove();
+          
+          // Prefetch icons before importing (for simple format)
+          if (importData.nodes) {
+            const tempElements = importData.nodes.map((node: any) => ({
+              data: {
+                faIcon: node.icon,
+                icon: node.icon
+              }
+            }));
+            await this.prefetchIconsFromData(tempElements);
+          }
+          // Prefetch icons for Cytoscape format
+          else if (importData.elements) {
+            await this.prefetchIconsFromData(importData.elements);
+          }
           
           // Check format and import accordingly
           if (importData.nodes && importData.connections) {
@@ -2280,12 +2429,14 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
               // Check if this is a group/container node - use saved flag or fallback to heuristics
               const isGroup = node.isGroup || node.id.startsWith('group-') || node.name === '' || node.icon === '📦';
               
+              const nodeName = node.name || node.label || node.id;
+              
               const nodeData: any = {
                 id: node.id,
-                label: isGroup ? '' : (node.name || node.label || node.id),
+                label: isGroup ? '' : nodeName,
+                service: isGroup ? '' : nodeName, // This is used for label display
                 color: node.color || '#3B82F6',
                 shape: node.shape || 'roundrectangle',
-                service: node.name || node.label || 'Custom',
                 icon: isGroup ? '' : (node.icon || '📦'),
                 faIcon: isGroup ? '' : (node.icon || '📦'),
                 isShape: isGroup // Mark groups as shapes
@@ -2464,6 +2615,44 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
               n.selectify();
             });
             
+            // Force style update to ensure labels and backgrounds are properly rendered
+            // Use setTimeout to ensure Cytoscape has completed its render cycle
+            setTimeout(() => {
+              if (this.cy) {
+                this.cy.nodes().forEach((node: any) => {
+                  if (!node.data('isShape') && !node.data('isGroup')) {
+                    // Force refresh the label and background
+                    const service = node.data('service') || node.data('label') || '';
+                    node.data('service', service);
+                    
+                    // Force regenerate background SVG
+                    const icon = node.data('faIcon') || node.data('icon');
+                    const color = node.data('color');
+                    if (icon && color) {
+                      const bgSvg = this.generateCardBackgroundSVG(icon, color);
+                      node.style({
+                        'background-image': bgSvg,
+                        'label': service,  // Set label directly in style
+                        'color': '#1f2937',
+                        'font-size': '13px',
+                        'font-weight': '600',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'text-margin-y': 40
+                      });
+                    }
+                    
+                    console.log(`✅ Updated node ${node.id()} with label: ${service}`);
+                  }
+                });
+                
+                // Force a complete render cycle
+                this.cy.forceRender();
+                
+                console.log('✅ Forced style refresh for all nodes with render');
+              }
+            }, 150);
+            
             // Re-enable edgehandles and setup event handlers after import
             const eh = (this.cy as any).edgehandles_instance;
             if (eh) {
@@ -2480,6 +2669,22 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
             
             // Auto-arrange layout after import with smart spacing
             this.autoArrangeAfterImport();
+            
+            // After layout animation completes, refresh labels again
+            setTimeout(() => {
+              if (this.cy) {
+                this.cy.nodes().forEach((node: any) => {
+                  if (!node.data('isShape') && !node.data('isGroup')) {
+                    const service = node.data('service') || node.data('label') || '';
+                    if (service) {
+                      node.style('label', service);
+                    }
+                  }
+                });
+                this.cy.forceRender();
+                console.log('✅ Labels refreshed after layout animation');
+              }
+            }, 1200); // After layout animation (1100ms) + 100ms buffer
             
             const nodeCount = importData.nodes.length;
             const edgeCount = importData.connections.length;
@@ -2628,7 +2833,7 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   // Load canvas from browser localStorage
-  loadCanvas(): void {
+  async loadCanvas(): Promise<void> {
     if (!this.cy) {
       console.warn('⚠️ Cannot load canvas - Cytoscape not initialized');
       return;
@@ -2643,6 +2848,9 @@ export class CytoscapeCanvasComponent implements OnInit, AfterViewInit, OnDestro
         console.log('📦 Found saved data:', data);
         
         if (data.elements && data.elements.length > 0) {
+          // Prefetch icons from saved data before adding elements
+          await this.prefetchIconsFromData(data.elements);
+          
           data.elements.forEach((ele: any) => {
             this.cy?.add(ele);
           });
@@ -3320,21 +3528,25 @@ ${nodes.map((node: any) =>
     
     try {
       const png64 = this.cy.png({
-        output: 'base64uri',  // Changed to base64uri for proper data URL
+        output: 'base64uri',
         bg: '#0f172a',
-        full: true,
-        scale: 2
+        full: false,  // Don't export full canvas
+        scale: 2,
+        maxWidth: 5000,
+        maxHeight: 5000
       });
       
+      // Download
       const link = document.createElement('a');
       link.href = png64;
       link.download = `architecture-${Date.now()}.png`;
-      document.body.appendChild(link);  // Add to DOM
+      document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);  // Clean up
+      document.body.removeChild(link);
       
-      console.log('✅ PNG exported and downloaded');
+      console.log('✅ PNG exported (viewport only)');
       alert('✅ PNG exported successfully!');
+      
     } catch (error) {
       console.error('❌ PNG export failed:', error);
       alert('❌ Failed to export PNG. Please try again.');
